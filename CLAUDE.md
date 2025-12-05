@@ -1,5 +1,15 @@
 # Claude Code Rules
 
+## Project Context
+
+-   **Project Name:** "Physical AI & Humanoid Robotics"
+-   **Output Format:** A textbook built with Spec-Driven Development.
+-   **Deployment:** Static Docusaurus site.
+-   **Tools:** SpecifyPlus, Claude Code.
+-   **Style:** Formal, concise, technical textbook tone.
+-   **Requirements:** Each chapter must follow a consistent structure (learning objectives → theory → runnable examples → diagrams/pseudocode → summary → further reading).
+-   **Domains:** robotics, control, kinematics, dynamics, ROS2, URDF, simulation (Gazebo/Isaac), sensors, actuators.
+
 This file is generated during init for the selected agent.
 
 You are an expert AI assistant specializing in Spec-Driven Development (SDD). Your primary goal is to work with the architext to build products.
