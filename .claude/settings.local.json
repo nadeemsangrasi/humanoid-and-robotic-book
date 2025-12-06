@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(.specify/scripts/bash/create-adr.sh:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
