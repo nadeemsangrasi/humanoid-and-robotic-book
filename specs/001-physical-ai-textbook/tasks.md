@@ -264,6 +264,7 @@ description: "Task list for Physical AI & Humanoid Robotics Textbook implementat
 - [ ] T030 [US5] Verify `npm run build` command locally to ensure a successful static site generation.
 
 - [ ] T031 [US5] Test the GitHub Actions deployment workflow in `.github/workflows/deploy.yml` by pushing a branch and observing deployment to GitHub Pages.
+- [ ] T036 [US5] Verify NFR-001: GitHub Pages uptime and recovery expectations are met (manual check of deployed site's availability and error handling).
 
 
 

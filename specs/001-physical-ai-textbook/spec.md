@@ -182,8 +182,8 @@ As a project contributor, I want to build the Docusaurus site and deploy it to G
 
 -   **SC-001**: All four specified modules and their core chapters are complete and published within the Docusaurus site.
 -   **SC-002**: The Docusaurus site builds successfully with zero errors and deploys to GitHub Pages.
--   **SC-003**: 95% of technical claims in the textbook are explicitly supported by citations or runnable code examples.
--   **SC-004**: All embedded code examples compile/run successfully in their specified environments (e.g., ROS 2, Isaac Sim).
+-   **SC-003**: 95% of technical claims in the textbook are explicitly supported by citations, conceptual code blocks, or diagrams.
+-   **SC-004**: All embedded conceptual code blocks and diagrams accurately illustrate concepts and adhere to specified syntax.
 -   **SC-005**: All required pages (home, modules, chapters, references, glossary, index) are accessible and render correctly.
 -   **SC-006**: The textbook content adheres to the defined chapter layout strategy across 100% of chapters.
 -   **SC-007**: Navigation between modules and chapters is intuitive and consistent, allowing users to reach any chapter from the homepage in 3 clicks or less.
