@@ -52,7 +52,7 @@ This constitution defines how the book will be structured, authored, and maintai
 
 ---
 
-## 1.1 Core Technical Principles
+## 1.1 Core Technical Principles 
 
 ### I. Technical Accuracy & Verifiability
 All technical claims and data MUST be accurate, technically sound, and verifiable against primary robotics and AI sources or through direct demonstration.
