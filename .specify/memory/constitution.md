@@ -61,10 +61,10 @@ All technical claims and data MUST be accurate, technically sound, and verifiabl
 Content MUST be structured and written for optimal student comprehension, prioritizing clarity, progressive difficulty, and practical application for engineering and computer science students.
 
 ### III. Executable by Design
-All code examples and demonstrations MUST be minimal, fully runnable, and validated in the specified target environments (Ubuntu 22.04, ROS 2 Humble, Isaac Sim, Unity).
+All demonstrations MUST be minimal and validated in the specified target environments (Ubuntu 22.04, ROS 2 Humble, Isaac Sim, Unity).
 
 ### IV. No Hypotheticals
-Invented robotics systems, fake APIs, hallucinated parameters, or fictional sensors are strictly forbidden. All examples MUST correspond to real-world or industry-standard systems.
+Invented robotics systems, hallucinated parameters, or fictional sensors are strictly forbidden. All examples MUST correspond to real-world or industry-standard systems.
 
 ---
 
@@ -90,7 +90,6 @@ All writing must follow this workflow:
     *   Chapter specs
     *   Section outlines
     *   Diagram prompts
-    *   Code example structures
 
 2.  **Use Claude Code** to convert Spec-Kit specs → `.md` files.
 
@@ -147,7 +146,6 @@ To ensure high-quality, AI-native book content:
     *   Concept explanations
     *   Mermaid diagrams
     *   Step-by-step tutorials
-    *   Code blocks
     *   Common errors + troubleshooting
     *   Exercises
 *   Use American English.
@@ -219,12 +217,6 @@ The project succeeds when:
 *   All modules + capstone have full chapters
 *   Docusaurus builds successfully
 *   Content meets Spec-Kit quality guidelines
-*   Code examples run on:
-
-    *   Ubuntu 22.04
-    *   ROS 2 Humble
-    *   Isaac Sim
-    *   Unity (optional)
 *   Navigation is clean and intuitive
 *   Content is chunk-friendly for RAG used in next project phases
 
@@ -253,12 +245,11 @@ All chapters and content modules MUST pass the following checks before integrati
 
 *   [ ] Content is technically accurate and derived from primary robotics/AI sources.
 *   [ ] Terminology, symbols, units, and coordinate frames align with established ROS2, URDF, and robotics conventions and are consistent throughout.
-*   [ ] Code blocks compile or run as demonstrated in the specified environments.
+*   [ ] Demonstrations are verifiable in the specified environments.
 *   [ ] Markdown passes a Docusaurus build without errors.
 *   [ ] Chapter structure matches the required flow (learning objectives → theory → runnable example → diagram/pseudocode → summary → further reading).
-*   [ ] No hallucinated parameters, libraries, robotics behaviors, or invented systems.
+*   [ ] No hallucinated parameters, robotics behaviors, or invented systems.
 *   [ ] All new material includes a small, testable spec via Spec-Kit Plus.
-*   [ ] All examples contain runnable, minimal code.
 *   [ ] All internal and external links resolve correctly within the Docusaurus site.
 *   [ ] Diagrams are generated or verified from accurate robotics models.
 *   [ ] Mathematical expressions use consistent LaTeX formatting.
