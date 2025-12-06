@@ -155,7 +155,6 @@ As a project contributor, I want to build the Docusaurus site and deploy it to G
 ### Non-Functional Requirements
 
 -   **NFR-001**: The deployed Docusaurus textbook site MUST have best effort uptime and recovery expectations (e.g., GitHub Pages default).
--   **NFR-002**: Content MUST be chunked with defined semantic boundaries (e.g., per sub-section or paragraph) to optimize for future RAG (Retrieval Augmented Generation) applications.
 
 ### Functional Requirements
 
