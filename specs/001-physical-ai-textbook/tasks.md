@@ -56,7 +56,7 @@ description: "Task list for Physical AI & Humanoid Robotics Textbook implementat
 
 
 
-- [ ] T001 Create Docusaurus project boilerplate in `/` (repository root)
+- [ ] T001 Create Docusaurus project boilerplate in `/` (repository root) using `npx create-docusaurus@latest . classic --typescript`
 
 - [ ] T002 Configure `docusaurus.config.js` for site metadata, GitHub Pages deployment settings, MDX, syntax highlighting, navbar/footer in `docusaurus.config.js`
 
@@ -194,7 +194,6 @@ description: "Task list for Physical AI & Humanoid Robotics Textbook implementat
 
 - [ ] T021 [US3] Implement a workflow to generate MDX content from granular Spec-Kit specifications, adhering to the 13-week breakdown.
 
-- [ ] T022 [US3] Integrate Context7 MCP server for Docusaurus-specific syntax and best practices verification during content generation.
 
 
 
