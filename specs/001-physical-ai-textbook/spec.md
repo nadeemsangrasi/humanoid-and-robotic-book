@@ -26,15 +26,15 @@ As a student, I want to easily navigate and read the textbook content, which is 
 
 ### User Story 2 - Utilize Code Examples and Diagrams (Priority: P1)
 
-As a student, I want to view and understand diagrams within the textbook so that I can grasp practical applications of the concepts.
+As a student, I want to view and understand diagrams and conceptual code blocks within the textbook so that I can grasp practical applications of the concepts.
 
 **Why this priority**: Essential for technical education; hands-on learning.
 
-**Independent Test**: Can be fully tested by verifying that all embedded code blocks and diagrams render correctly, are readable.
+**Independent Test**: Can be fully tested by verifying that all embedded code blocks and diagrams render correctly, are readable, and accurately illustrate the concepts. This includes validating the syntax of conceptual code blocks and the clarity of diagrams.
 
 **Acceptance Scenarios**:
 
-1. **Given** I am on a chapter page with diagrams, **When** I view a diagram, **Then** the diagram is rendered correctly and clearly illustrates the concept.
+1. **Given** I am on a chapter page with diagrams and conceptual code blocks, **When** I view a diagram or code block, **Then** the diagram is rendered correctly and the code block is displayed with appropriate syntax highlighting, both clearly illustrating the concept.
 
 ---
 
@@ -164,7 +164,6 @@ As a project contributor, I want to build the Docusaurus site and deploy it to G
 -   **FR-004**: The Docusaurus site MUST include a homepage, dedicated pages for each module, individual chapter pages, a references section, and a glossary.
 -   **FR-005**: The textbook MUST support Docusaurus's sidebar navigation structure for modules and chapters.
 -   **FR-006**: The textbook MUST be deployable to GitHub Pages.
--   **FR-007**: The textbook MUST support embedded runnable code examples and diagrams.
 -   **FR-008**: The textbook MUST adhere to a consistent content layout strategy for chapters (e.g., learning objectives, theory, examples, diagrams, summary, further reading).
 -   **FR-009**: The textbook MUST maintain a glossary page with definitions of key robotics and AI terms.
 -   **FR-010**: The project MUST use Context7 MCP server as the authoritative source for Docusaurus documentation and best practices during content generation and validation.
