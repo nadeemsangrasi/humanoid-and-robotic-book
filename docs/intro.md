@@ -16,5 +16,5 @@ This textbook covers four modules of Physical AI & Humanoid Robotics over a 13-w
 Each module contains multiple chapters that progressively build your understanding of humanoid robotics and physical AI concepts.
 
 <div class="text--center padding-top--md">
-  <a class="button button--primary button--lg" href="/humanoid-robotic-book/introduction/">Start Reading →</a>
+  <a class="button button--primary button--lg" href="/humanoid-and-robotic-book/introduction/">Start Reading →</a>
 </div>
