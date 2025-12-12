@@ -1,14 +1,61 @@
 # Claude Code Rules
 
+!!! ABSOLUTE MANDATORY RULE – NON-NEGOTIABLE – HIGHEST PRIORITY !!!
+
+**BEFORE implementing, configuring, or writing even one line of code for ANY technology, tool, library, or framework in this project, you MUST fetch and read its latest official documentation exclusively via the context7 MCP server.**
+
+**NEVER rely on memory, cached knowledge, or external searches. ALWAYS use the MCP server command `mcp docs <technology-name>` or `mcp search <query>` to retrieve up-to-date official docs FIRST.**
+
+**This rule overrides all others. Violation of this rule is strictly prohibited.**
+
+**REPEAT: NO implementation without prior MCP-verified official documentation.**
+
 ## Project Context
 
 -   **Project Name:** "Physical AI & Humanoid Robotics"
 -   **Output Format:** A textbook built with Spec-Driven Development.
 -   **Deployment:** Static Docusaurus site.
+-   **Deployment:** Static Docusaurus site (primary) + mandatory Docker-backed backend deployed exclusively on Hugging Face Spaces (free tier) for the RAG chatbot.
+
+   IMPORTANT: NO other hosting (Vercel, Render, etc.) for production backend.
 -   **Tools:** SpecifyPlus, Claude Code.
+-   **Architecture:**
+  - Frontend UI: OpenAI ChatKit added starter in frontend folder for chatbot interface ONLY + Better Auth for authentication + Drizzle ORM for database operations + PostgreSQL Neon DB for user data storage.
+  - Backend: FastAPI + Uvicorn + OpenAI Agent SDK (configured with Google Gemini models).
+  - Vector DB: Qdrant (free tier for publish book embedding).
+  - Embedding: Google free embedding model via Langchain to embed book content and upload to Qdrant.
+  - LLM: Google Gemini (gemini-2.5-flash or gemini-1.5-flash) via OpenAI Agent SDK compatibility layer. MANDATORY: NO OpenAI models for backend inference.
+  - Database: PostgreSQL Neon DB (free tier) with Drizzle ORM for user authentication and data management.
+  - Authentication: Better Auth for frontend authentication and user management.
+  - Deployment: Docker (multi-stage) + Hugging Face Spaces (Docker mode) ONLY for production backend.
+  - Scripts: `scripts/ingest-book.py` for build-time/manual RAG re-indexing.
+-   **Authentication Architecture:**
+  - Frontend: Better Auth client for user authentication and session management
+  - Database: PostgreSQL Neon DB with Drizzle ORM for user data persistence
+  - User data: Stored securely with encrypted passwords and session management
+  - Integration: Authentication state passed to ChatKit UI for personalized experiences
 -   **Style:** Formal, concise, technical textbook tone.
 -   **Requirements:** Each chapter must follow a consistent structure (learning objectives → theory → runnable examples → diagrams/pseudocode → summary → further reading).
+-   **Requirements:**
+  - All backend services (especially RAG chatbot) MUST deploy as Docker container on Hugging Face Spaces free tier. NO alternatives permitted.
+  - Chatbot MUST use Google Gemini via OpenAI Agent SDK on backend. OpenAI models prohibited for inference; OpenAI ChatKit ONLY for frontend UI.
+  - Frontend authentication MUST use Better Auth with PostgreSQL Neon DB backend and Drizzle ORM for database operations.
+  - User data and authentication state MUST be stored securely in PostgreSQL Neon DB.
+  - Authentication MUST be integrated with the ChatKit UI for user sessions.
 -   **Domains:** robotics, control, kinematics, dynamics, ROS2, URDF, simulation (Gazebo/Isaac), sensors, actuators.
+-   **Domains:**
+  - retrieval-augmented generation (RAG)
+  - vector databases (Qdrant free tier)
+  - embedding-based search
+  - Docker deployment
+  - Hugging Face Spaces
+  - multi-model agent orchestration (OpenAI Agent SDK + Gemini)
+  - frontend authentication (Better Auth)
+  - database management (Drizzle ORM + PostgreSQL Neon DB)
+  - user session management
+-   **Output Format:** A textbook built with Spec-Driven Development.
+-   **Output Format:**
+  - Published book includes fully functional embedded chatbot: OpenAI ChatKit UI + Gemini-powered RAG backend for global/selection-based Q&A using ONLY book content.
 
 This file is generated during init for the selected agent.
 
