@@ -1,6 +1,6 @@
 ---
 name: Qdrant Retrieval Tool
-description: Generate JSON schemas and Python handlers for Qdrant-based retrieval tools used by the RAG agent to search textbook content.
+description: Generate JSON schemas and Python handlers for Qdrant-based retrieval tools used by the RAG agent to search sitemap-crawled textbook content with URL citations.
 ---
 
 # Qdrant Retrieval Tool
@@ -8,101 +8,163 @@ description: Generate JSON schemas and Python handlers for Qdrant-based retrieva
 ## Instructions
 
 1. Create tool definitions for retrieval functionality in app/services/tools/retrieval_tools.py:
-   - Define retrieve_passages({ query: string }) tool
+   - Define retrieve_passages({ query: string, k: int }) tool
    - Define lookup_metadata({ id: string }) tool
    - Create proper JSON schemas following OpenAI Agent SDK specification
    - Include proper parameter validation
 
 2. Implement Qdrant client integration:
-   - Initialize Qdrant client with proper configuration
-   - Connect to the "book_chunks" collection
-   - Implement vector search functionality
+   - Initialize Qdrant client with cloud configuration
+   - Connect to the "book_chunks" collection (768 dimensions, cosine distance)
+   - Implement vector search using Gemini embeddings
    - Handle connection errors and retries
 
-3. Create retrieval handlers:
+3. Create retrieval handlers with URL-based metadata:
    - Implement retrieve_passages function that performs semantic search
+   - Return results with full metadata including source URL for citations
    - Implement lookup_metadata function for getting document metadata
    - Include proper error handling and logging
-   - Return results in the expected format for the agent
 
-4. Follow Context7 MCP conventions:
+4. Metadata schema for retrieved passages:
+   ```python
+   {
+       "id": "hash_of_url_and_chunk_index",
+       "content": "The actual text content...",
+       "score": 0.95,
+       "metadata": {
+           "url": "https://nadeemsangrasi.github.io/humanoid-and-robotic-book/module-1-ros2/03-ros2-communication-patterns/",
+           "module": "module-1-ros2",
+           "chapter": "03-ros2-communication-patterns",
+           "title": "ROS2 Communication Patterns",
+           "chunk_index": 0,
+           "content_type": "text",
+           "heading": "Topic Subscriptions"
+       }
+   }
+   ```
+
+5. Follow Context7 MCP conventions:
    - Match OpenAI Agent SDK tool specification exactly
    - Produce deterministic JSON schemas
-   - Integrate with RAG Pipeline tools
+   - Integrate with Gemini embeddings for query encoding
    - Follow proper error handling patterns
 
-5. Add proper configuration management:
-   - Support environment variables for Qdrant connection
-   - Include default values and validation
-   - Handle both local and cloud Qdrant instances
+6. Add proper configuration management:
+   - QDRANT_URL: Qdrant Cloud cluster URL
+   - QDRANT_API_KEY: API key for authentication
+   - GOOGLE_API_KEY: For query embedding generation
+   - Support both local and cloud Qdrant instances
 
 ## Examples
 
-Input: "Create Qdrant retrieval tools"
+Input: "Create Qdrant retrieval tools with URL citations"
 Output: Creates retrieval_tools.py with:
 ```python
 from qdrant_client import QdrantClient
-from typing import List, Dict, Any
+from qdrant_client.models import Filter, FieldCondition, MatchValue
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from typing import List, Dict, Any, Optional
 import os
+import hashlib
 
-# Initialize Qdrant client
+# Initialize clients
 qdrant_client = QdrantClient(
-    url=os.getenv("QDRANT_URL", "http://localhost:6333"),
+    url=os.getenv("QDRANT_URL"),
     api_key=os.getenv("QDRANT_API_KEY")
 )
 
-def retrieve_passages(query: str) -> List[Dict[str, Any]]:
-    """Retrieve relevant passages from the textbook using semantic search."""
-    try:
-        # Perform vector search in Qdrant
-        search_results = qdrant_client.search(
-            collection_name="book_chunks",
-            query_text=query,
-            limit=5
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/gemini-embedding-001",
+    google_api_key=os.getenv("GOOGLE_API_KEY")
+)
+
+COLLECTION_NAME = "book_chunks"
+
+def retrieve_passages(query: str, k: int = 5, module_filter: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Retrieve relevant passages from the textbook using semantic search.
+
+    Returns passages with source URLs for citation.
+    """
+    # Generate query embedding
+    query_vector = embeddings.embed_query(query)
+
+    # Build filter if module specified
+    search_filter = None
+    if module_filter:
+        search_filter = Filter(
+            must=[FieldCondition(key="module", match=MatchValue(value=module_filter))]
         )
 
-        passages = []
-        for result in search_results:
-            passages.append({
-                "id": result.id,
-                "content": result.payload.get("content", ""),
-                "metadata": result.payload.get("metadata", {}),
-                "score": result.score
-            })
+    # Perform vector search
+    search_results = qdrant_client.search(
+        collection_name=COLLECTION_NAME,
+        query_vector=query_vector,
+        limit=k,
+        query_filter=search_filter,
+        with_payload=True
+    )
 
-        return passages
-    except Exception as e:
-        # Handle errors appropriately
-        raise e
+    passages = []
+    for result in search_results:
+        passages.append({
+            "id": result.id,
+            "content": result.payload.get("content", ""),
+            "score": result.score,
+            "metadata": {
+                "url": result.payload.get("url", ""),
+                "module": result.payload.get("module", ""),
+                "chapter": result.payload.get("chapter", ""),
+                "title": result.payload.get("title", ""),
+                "chunk_index": result.payload.get("chunk_index", 0),
+                "heading": result.payload.get("heading", "")
+            }
+        })
+
+    return passages
 
 def lookup_metadata(doc_id: str) -> Dict[str, Any]:
-    """Lookup metadata for a specific document."""
-    try:
-        records = qdrant_client.retrieve(
-            collection_name="book_chunks",
-            ids=[doc_id]
-        )
+    """Lookup metadata for a specific document chunk by ID."""
+    records = qdrant_client.retrieve(
+        collection_name=COLLECTION_NAME,
+        ids=[doc_id],
+        with_payload=True
+    )
 
-        if records:
-            return records[0].payload.get("metadata", {})
-        return {}
-    except Exception as e:
-        # Handle errors appropriately
-        raise e
+    if records:
+        payload = records[0].payload
+        return {
+            "url": payload.get("url", ""),
+            "module": payload.get("module", ""),
+            "chapter": payload.get("chapter", ""),
+            "title": payload.get("title", ""),
+            "chunk_index": payload.get("chunk_index", 0),
+            "heading": payload.get("heading", "")
+        }
+    return {}
 
-# Define tool schemas for OpenAI Agent SDK
+# Tool schemas for OpenAI Agent SDK
 retrieval_tools = [
     {
         "type": "function",
         "function": {
             "name": "retrieve_passages",
-            "description": "Retrieve relevant passages from the textbook based on the query",
+            "description": "Retrieve relevant passages from the Physical AI & Humanoid Robotics textbook based on semantic search. Returns passages with source URLs for citations.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "query": {
                         "type": "string",
-                        "description": "The search query to find relevant passages"
+                        "description": "The search query to find relevant passages about robotics, ROS2, simulation, etc."
+                    },
+                    "k": {
+                        "type": "integer",
+                        "description": "Number of passages to retrieve (default: 5, max: 10)",
+                        "default": 5
+                    },
+                    "module_filter": {
+                        "type": "string",
+                        "description": "Optional filter by module (e.g., 'module-1-ros2', 'module-2-gazebo-unity')",
+                        "enum": ["module-1-ros2", "module-2-gazebo-unity", "module-3-nvidia-isaac", "module-4-vla", "capstone"]
                     }
                 },
                 "required": ["query"]
@@ -113,13 +175,13 @@ retrieval_tools = [
         "type": "function",
         "function": {
             "name": "lookup_metadata",
-            "description": "Lookup metadata for a specific document by ID",
+            "description": "Lookup metadata for a specific document chunk by ID to get source URL and context",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "id": {
                         "type": "string",
-                        "description": "The document ID to lookup metadata for"
+                        "description": "The document chunk ID to lookup metadata for"
                     }
                 },
                 "required": ["id"]
