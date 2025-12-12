@@ -1,44 +1,25 @@
 <!--
 Sync Impact Report:
-Version change: 1.0.0 → 1.1.1
+Version change: 1.1.1 → 1.2.0
 List of modified principles:
-  - Technical Accuracy & Verifiability (Added)
-  - Pedagogical Clarity (Added)
-  - Executable by Design (Added)
-  - No Hypotheticals (Added)
+  - Added Backend Technology Requirements (New)
+  - Added RAG Chatbot Integration (New)
+  - Added Deployment Constraints (New)
+  - Updated Technical Stack (Expanded to include RAG, Qdrant, Gemini)
 Added sections:
-  - 1.1 Core Technical Principles
-  - 6.1 Docusaurus Formatting & Linking
-  - 6.2 Mathematical & Diagram Standards
-  - 6.3 Terminology & Symbol Consistency
-  - 12. Constraints
-  - 13. Acceptance & Quality Gates
-  - 14. Governance (Expanded)
+  - 2.1 Backend Services & RAG Integration
+  - 6.4 RAG & Vector Database Standards
+  - 12.IV Deployment Constraints
 Modified sections:
-  - Section 4: Added glossary purpose.
-  - Section 6.1: Added example for code block language.
-  - Section 6.2: Clarified exercise guidelines.
-  - Section 12.I: Added rationale.
-  - Section 12.II: Added rationale.
-  - Section 12.III: Added rationale.
-  - Section 14: Clarified review process.
-Removed sections: None (sections were added/expanded within the existing structure)
+  - Section 2: Expanded scope to include backend services
+  - Section 12.I: Updated technology stack to include backend components
+  - Section 12.III: Updated to include RAG-specific constraints
+Removed sections: None
 Templates requiring updates:
-  - .specify/templates/plan-template.md: ✅ updated
-  - .specify/templates/spec-template.md: ✅ updated
-  - .specify/templates/tasks-template.md: ✅ updated
-  - .claude/commands/sp.adr.md: ✅ updated
-  - .claude/commands/sp.analyze.md: ✅ updated
-  - .claude/commands/sp.checklist.md: ✅ updated
-  - .claude/commands/sp.clarify.md: ✅ updated
-  - .claude/commands/sp.constitution.md: ✅ updated
-  - .claude/commands/sp.git.commit_pr.md: ✅ updated
-  - .claude/commands/sp.implement.md: ✅ updated
-  - .claude/commands/sp.phr.md: ✅ updated
-  - .claude/commands/sp.plan.md: ✅ updated
-  - .claude/commands/sp.specify.md: ✅ updated
-  - .claude/commands/sp.tasks.md: ✅ updated
-  - CLAUDE.md: ✅ updated
+  - .specify/templates/plan-template.md: ⚠ pending
+  - .specify/templates/spec-template.md: ⚠ pending
+  - .specify/templates/tasks-template.md: ⚠ pending
+  - CLAUDE.md: ✅ already updated
 Follow-up TODOs: None
 -->
 # Project Constitution: Physical AI & Humanoid Robotics Textbook
@@ -48,11 +29,11 @@ Follow-up TODOs: None
 This project creates an **AI-native, Docusaurus-based textbook** for the course *Physical AI & Humanoid Robotics*.
 It will be written using **Spec-Kit Plus** and **Claude Code**, with documentation retrieval done via **Context7 MCP Server**.
 
-This constitution defines how the book will be structured, authored, and maintained.
+This constitution defines how the book will be structured, authored, and maintained, including the backend RAG chatbot functionality.
 
 ---
 
-## 1.1 Core Technical Principles 
+## 1.1 Core Technical Principles
 
 ### I. Technical Accuracy & Verifiability
 All technical claims and data MUST be accurate, technically sound, and verifiable against primary robotics and AI sources or through direct demonstration.
@@ -68,7 +49,7 @@ Invented robotics systems, hallucinated parameters, or fictional sensors are str
 
 ---
 
-## 2. Scope (Book Only)
+## 2. Scope (Book + Backend Services)
 
 This constitution covers:
 
@@ -76,8 +57,31 @@ This constitution covers:
 *   Organizing chapters under Docusaurus
 *   Defining structure, standards, guidelines
 *   Using Context7 MCP for all Docusaurus documentation lookups
+*   Backend services: FastAPI + Uvicorn + OpenAI Agent SDK with Google Gemini models
+*   Vector database: Qdrant (free tier) for book content embedding
+*   Embedding: Google free embedding model via Langchain
+*   RAG chatbot integration with OpenAI ChatKit UI
+*   Frontend authentication: Better Auth with PostgreSQL Neon DB and Drizzle ORM
+*   Database: PostgreSQL Neon DB (free tier) with Drizzle ORM for user data management
+*   Authentication: Better Auth for frontend authentication and user management
+*   Deployment: Docker (multi-stage) + Hugging Face Spaces (Docker mode) only
 *   Preparing content so that later RAG integration is easy
-.
+
+---
+
+## 2.1 Backend Services & RAG Integration
+
+### I. RAG Architecture Requirements
+The backend MUST implement a RAG (Retrieval-Augmented Generation) system that allows users to ask questions about the textbook content using an embedded chatbot. The system MUST use Google Gemini models (gemini-2.5-flash or gemini-1.5-flash) via OpenAI Agent SDK compatibility layer.
+
+### II. Vector Database Integration
+All textbook content MUST be embedded using Google's free embedding model via Langchain and stored in Qdrant vector database for efficient retrieval during RAG operations.
+
+### III. Frontend-Backend Separation
+The frontend UI MUST use OpenAI ChatKit ONLY for the chatbot interface. NO OpenAI models are permitted for backend inference; only Google Gemini models are allowed on the backend.
+
+### IV. Authentication & Database Integration
+The frontend MUST implement Better Auth for user authentication with PostgreSQL Neon DB as the backend database and Drizzle ORM for database operations. User data and session management MUST be handled securely through this stack.
 
 ---
 
@@ -98,6 +102,8 @@ All writing must follow this workflow:
     → This is the default and prioritized source for all official references.
 
 4.  Commit generated chapters to GitHub with clear semantic messages.
+
+5.  Content changes MUST be compatible with the RAG indexing system via `scripts/ingest-book.py`.
 
 ---
 
@@ -161,6 +167,9 @@ All diagrams MUST be generated or verified from accurate robotics models (URDF, 
 ### 6.3 Terminology & Symbol Consistency
 All terminology, symbols, units, and coordinate frames MUST be strictly consistent across the entire textbook and align with established robotics and AI conventions.
 
+### 6.4 RAG & Vector Database Standards
+All content MUST be structured in a way that supports RAG indexing and retrieval. Content chunks SHOULD be semantically coherent and self-contained for effective embedding and retrieval. All content MUST be suitable for RAG-based Q&A functionality where users can ask questions about specific sections or the entire book.
+
 ---
 
 ## 7. File Naming Rules
@@ -216,22 +225,27 @@ The project succeeds when:
 
 *   All modules + capstone have full chapters
 *   Docusaurus builds successfully
+*   Backend RAG chatbot functions properly with textbook content
 *   Content meets Spec-Kit quality guidelines
 *   Navigation is clean and intuitive
 *   Content is chunk-friendly for RAG used in next project phases
+*   All backend services deploy successfully on Hugging Face Spaces
 
 ---
 
 ## 12. Constraints
 
 ### I. Restricted Technology Stack
-Content and code examples MUST exclusively focus on ROS2, URDF, Gazebo/Isaac Sim, kinematics, dynamics, and control systems. Permitted programming languages include Python and C++. (Rationale: To maintain pedagogical focus, ensure consistent technical depth, and guarantee a reproducible learning environment.)
+Content and code examples MUST exclusively focus on ROS2, URDF, Gazebo/Isaac Sim, kinematics, dynamics, and control systems. Permitted programming languages include Python and C++. Backend services MUST use FastAPI, Uvicorn, OpenAI Agent SDK, Google Gemini models, and Qdrant vector database. Frontend authentication MUST use Better Auth with PostgreSQL Neon DB and Drizzle ORM. (Rationale: To maintain pedagogical focus, ensure consistent technical depth, and guarantee a reproducible learning environment.)
 
 ### II. Demonstrability & Verifiability
 No content is allowed that cannot be demonstrated in ROS2, Gazebo, or Isaac Sim. All explanations and claims MUST be verifiable and supported by evidence. (Rationale: All claims and concepts MUST be grounded in practical application and verifiable evidence for student learning.)
 
 ### III. No Non-Robotics Content
-The textbook MUST strictly avoid non-robotics related discussions, abstract AI theory without physical embodiment, or the introduction of invented frameworks, APIs, or tools. (Rationale: To preserve the core mission of the textbook and avoid diluting the focus with tangential or un-embodied AI concepts.)
+The textbook MUST strictly avoid non-robotics related discussions, abstract AI theory without physical embodiment, or the introduction of invented frameworks, APIs, or tools. Content for RAG indexing MUST be exclusively from the textbook content. (Rationale: To preserve the core mission of the textbook and avoid diluting the focus with tangential or un-embodied AI concepts.)
+
+### IV. Deployment Constraints
+All backend services (especially RAG chatbot) MUST deploy as Docker container on Hugging Face Spaces free tier. NO alternatives permitted. NO other hosting (Vercel, Render, etc.) for production backend. (Rationale: To ensure consistent, accessible deployment that meets project requirements and constraints.)
 
 ---
 
@@ -254,6 +268,8 @@ All chapters and content modules MUST pass the following checks before integrati
 *   [ ] Diagrams are generated or verified from accurate robotics models.
 *   [ ] Mathematical expressions use consistent LaTeX formatting.
 *   [ ] Includes at least one practical applied robotics exercise.
+*   [ ] Content is structured appropriately for RAG indexing and retrieval.
+*   [ ] Content is suitable for embedding and Q&A functionality.
 
 ---
 
@@ -267,4 +283,4 @@ Any modifications to core terminology, chapter structure, core robotics assumpti
 ### II. Contributor Responsibilities
 All contributors are responsible for adherence to this constitution and for running all specified acceptance checks prior to submitting work for review.
 
-**Version**: 1.1.1 | **Ratified**: 2025-12-05 | **Last Amended**: 2025-12-05
+**Version**: 1.2.0 | **Ratified**: 2025-12-05 | **Last Amended**: 2025-12-09
