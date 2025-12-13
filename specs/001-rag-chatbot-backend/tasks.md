@@ -48,19 +48,19 @@
 
 **Goal**: Project scaffolding ready for development
 
-- [ ] T001 Create backend/ directory structure per plan
+- [X] T001 Create backend/ directory structure per plan
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T002 Initialize Python project with requirements.txt and pyproject.toml
+- [X] T002 Initialize Python project with requirements.txt and pyproject.toml
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T003 [P] Create .env.example with all required variables (GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY, LOG_LEVEL)
+- [X] T003 [P] Create .env.example with all required variables (GOOGLE_API_KEY, QDRANT_URL, QDRANT_API_KEY, LOG_LEVEL)
       Agent: deployment-agent | Skill: huggingface-config
 
-- [ ] T004 [P] Setup logging configuration in backend/app/utils/logging.py
+- [X] T004 [P] Setup logging configuration in backend/app/utils/logging.py
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-**Checkpoint**: Project structure ready for implementation
+**Checkpoint**: Project structure ready for implementation ✅
 
 ---
 
@@ -68,22 +68,22 @@
 
 **Goal**: Core infrastructure ready - BLOCKS all user stories
 
-- [ ] T005 Create config.py with pydantic-settings for environment variable management in backend/app/config.py
+- [X] T005 Create config.py with pydantic-settings for environment variable management in backend/app/config.py
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T006 [P] Create base Pydantic schemas in backend/app/schemas/__init__.py (export all schemas)
+- [X] T006 [P] Create base Pydantic schemas in backend/app/schemas/__init__.py (export all schemas)
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T007 [P] Setup Qdrant client connection with collection creation in backend/app/services/retrieval/qdrant_client.py
+- [X] T007 [P] Setup Qdrant client connection with collection creation in backend/app/services/retrieval/qdrant_client.py
       Agent: RAG-pipeline-and-retrieval-agent | Skill: qdrant-retrieval-tool
 
-- [ ] T008 [P] Setup Gemini embeddings service in backend/app/services/embedding/embedding.py
+- [X] T008 [P] Setup Gemini embeddings service in backend/app/services/embedding/embedding.py
       Agent: RAG-pipeline-and-retrieval-agent | Skill: embedding-pipeline
 
-- [ ] T009 Create FastAPI app in backend/app/main.py with CORS middleware and router registration
+- [X] T009 Create FastAPI app in backend/app/main.py with CORS middleware and router registration
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-**Checkpoint**: Foundation complete - user story implementation can begin
+**Checkpoint**: Foundation complete - user story implementation can begin ✅
 
 ---
 
@@ -94,34 +94,34 @@
 **Skills**: fastapi-scaffolding, gemini-agent-sdk-setup, rag-chat-endpoint
 **Independent Test**: Send POST /chat with question, receive answer + citations
 
-- [ ] T010 [US1] Create ChatRequest schema with query validation (1-2000 chars) in backend/app/schemas/chat.py
+- [X] T010 [US1] Create ChatRequest schema with query validation (1-2000 chars) in backend/app/schemas/chat.py
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T011 [US1] Create ChatResponse and Citation schemas in backend/app/schemas/chat.py
+- [X] T011 [US1] Create ChatResponse and Citation schemas in backend/app/schemas/chat.py
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T012 [US1] Create ResponseMetadata and ErrorResponse schemas in backend/app/schemas/chat.py
+- [X] T012 [US1] Create ResponseMetadata and ErrorResponse schemas in backend/app/schemas/chat.py
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T013 [US1] Implement search_textbook function tool in backend/app/services/agent/tools.py
+- [X] T013 [US1] Implement search_textbook function tool in backend/app/services/agent/tools.py
       Agent: RAG-pipeline-and-retrieval-agent | Skill: qdrant-retrieval-tool
 
-- [ ] T014 [US1] Configure OpenAI Agent SDK with Gemini (gemini-2.0-flash) in backend/app/services/agent/orchestrator.py
+- [X] T014 [US1] Configure OpenAI Agent SDK with Gemini (gemini-2.0-flash) in backend/app/services/agent/orchestrator.py
       Agent: backend-architect-and-sdk-agent | Skill: gemini-agent-sdk-setup
 
-- [ ] T015 [US1] Register search_textbook tool with agent in backend/app/services/agent/orchestrator.py
+- [X] T015 [US1] Register search_textbook tool with agent in backend/app/services/agent/orchestrator.py
       Agent: backend-architect-and-sdk-agent | Skill: gemini-agent-sdk-setup
 
-- [ ] T016 [US1] Implement POST /chat endpoint in backend/app/routers/chat.py
+- [X] T016 [US1] Implement POST /chat endpoint in backend/app/routers/chat.py
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T017 [US1] Wire agent orchestration to return ChatResponse with citations
+- [X] T017 [US1] Wire agent orchestration to return ChatResponse with citations
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T018 [US1] Add citation URL formatting and snippet extraction (max 200 chars)
+- [X] T018 [US1] Add citation URL formatting and snippet extraction (max 200 chars)
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-**Checkpoint**: US1 complete - can ask questions and get cited answers
+**Checkpoint**: US1 complete - can ask questions and get cited answers ✅
 
 ---
 
@@ -132,31 +132,31 @@
 **Skills**: book-ingestion, embedding-pipeline, qdrant-retrieval-tool
 **Independent Test**: Run ingest script, verify chunks in Qdrant
 
-- [ ] T019 [US2] Create sitemap parser to extract page URLs in backend/scripts/ingest-book.py
+- [X] T019 [US2] Create sitemap parser to extract page URLs in backend/scripts/ingest-book.py
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-- [ ] T020 [US2] Implement HTML content extractor with Docusaurus selectors (strip nav/footer/sidebar)
+- [X] T020 [US2] Implement HTML content extractor with Docusaurus selectors (strip nav/footer/sidebar)
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-- [ ] T021 [US2] Implement token-based text chunker (500-1000 tokens) preserving headings
+- [X] T021 [US2] Implement token-based text chunker (500-1000 tokens) preserving headings
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-- [ ] T022 [US2] Add metadata extraction (url, module, chapter, title, heading, chunk_index)
+- [X] T022 [US2] Add metadata extraction (url, module, chapter, title, heading, chunk_index)
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-- [ ] T023 [US2] Implement batch embedding with GoogleGenerativeAIEmbeddings (text-embedding-004)
+- [X] T023 [US2] Implement batch embedding with GoogleGenerativeAIEmbeddings (text-embedding-004)
       Agent: RAG-pipeline-and-retrieval-agent | Skill: embedding-pipeline
 
-- [ ] T024 [US2] Implement Qdrant upsert with deterministic IDs (md5 of url::chunk_index)
+- [X] T024 [US2] Implement Qdrant upsert with deterministic IDs (md5 of url::chunk_index)
       Agent: RAG-pipeline-and-retrieval-agent | Skill: qdrant-retrieval-tool
 
-- [ ] T025 [US2] Add progress tracking, logging, and IngestionResult output
+- [X] T025 [US2] Add progress tracking, logging, and IngestionResult output
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-- [ ] T026 [US2] Add error handling for network failures and partial ingestion recovery
+- [X] T026 [US2] Add error handling for network failures and partial ingestion recovery
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-**Checkpoint**: US2 complete - textbook indexed in Qdrant (350-500 chunks)
+**Checkpoint**: US2 complete - textbook indexed in Qdrant (350-500 chunks) ✅
 
 ---
 
@@ -164,13 +164,13 @@
 
 **Goal**: Health check for HF Spaces deployment verification
 
-- [ ] T027 [P] Implement GET /health endpoint in backend/app/routers/health.py
+- [X] T027 [P] Implement GET /health endpoint in backend/app/routers/health.py
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T028 [P] Create HealthStatus and ServiceStatus schemas in backend/app/schemas/health.py
+- [X] T028 [P] Create HealthStatus and ServiceStatus schemas in backend/app/schemas/health.py
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-**Checkpoint**: Health endpoint ready for deployment
+**Checkpoint**: Health endpoint ready for deployment ✅
 
 ---
 
@@ -181,19 +181,19 @@
 **Skills**: dockerfile-builder, huggingface-config
 **Independent Test**: Access deployed /health endpoint
 
-- [ ] T029 [US3] Create multi-stage Dockerfile in backend/Dockerfile (Python 3.11-slim)
+- [X] T029 [US3] Create multi-stage Dockerfile in backend/Dockerfile (Python 3.11-slim)
       Agent: deployment-agent | Skill: dockerfile-builder
 
-- [ ] T030 [US3] Configure port 7860 exposure and uvicorn CMD
+- [X] T030 [US3] Configure port 7860 exposure and uvicorn CMD
       Agent: deployment-agent | Skill: dockerfile-builder
 
-- [ ] T031 [US3] Create README.md with HF Spaces metadata (title, emoji, sdk, app_port)
+- [X] T031 [US3] Create README.md with HF Spaces metadata (title, emoji, sdk, app_port)
       Agent: deployment-agent | Skill: huggingface-config
 
-- [ ] T032 [US3] Test Docker build and run locally
+- [X] T032 [US3] Test Docker build and run locally
       Agent: deployment-agent | Skill: local-dev-runner
 
-**Checkpoint**: US3 complete - backend deployable to HF Spaces
+**Checkpoint**: US3 complete - backend deployable to HF Spaces ✅
 
 ---
 
@@ -204,13 +204,13 @@
 **Skills**: huggingface-config
 **Independent Test**: Backend connects to Qdrant and Gemini API without exposing secrets
 
-- [ ] T033 [US4] Document all required environment variables in backend/README.md
+- [X] T033 [US4] Document all required environment variables in backend/README.md
       Agent: deployment-agent | Skill: huggingface-config
 
-- [ ] T034 [US4] Add environment variable validation on startup in backend/app/config.py
+- [X] T034 [US4] Add environment variable validation on startup in backend/app/config.py
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-**Checkpoint**: US4 complete - environment configuration documented and validated
+**Checkpoint**: US4 complete - environment configuration documented and validated ✅
 
 ---
 
@@ -221,13 +221,13 @@
 **Skills**: local-dev-runner
 **Independent Test**: Run docker-compose up, access localhost:7860/health
 
-- [ ] T035 [US5] Create docker-compose.yml for local development in backend/docker-compose.yml
+- [X] T035 [US5] Create docker-compose.yml for local development in backend/docker-compose.yml
       Agent: deployment-agent | Skill: local-dev-runner
 
-- [ ] T036 [US5] Create local development scripts (run.sh, build.sh) in backend/scripts/
+- [X] T036 [US5] Create local development scripts (run.sh, build.sh) in backend/scripts/
       Agent: deployment-agent | Skill: local-dev-runner
 
-**Checkpoint**: US5 complete - local development environment ready
+**Checkpoint**: US5 complete - local development environment ready ✅
 
 ---
 
@@ -235,19 +235,19 @@
 
 **Goal**: Test coverage for critical paths
 
-- [ ] T037 Create tests/conftest.py with pytest fixtures (mock Qdrant, mock Gemini)
+- [X] T037 Create tests/conftest.py with pytest fixtures (mock Qdrant, mock Gemini)
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T038 [P] Implement tests/test_health.py for health endpoint
+- [X] T038 [P] Implement tests/test_health.py for health endpoint
       Agent: backend-architect-and-sdk-agent | Skill: fastapi-scaffolding
 
-- [ ] T039 [P] Implement tests/test_chat.py for chat endpoint
+- [X] T039 [P] Implement tests/test_chat.py for chat endpoint
       Agent: backend-architect-and-sdk-agent | Skill: rag-chat-endpoint
 
-- [ ] T040 [P] Implement tests/test_ingestion.py for ingestion script
+- [X] T040 [P] Implement tests/test_ingestion.py for ingestion script
       Agent: RAG-pipeline-and-retrieval-agent | Skill: book-ingestion
 
-**Checkpoint**: All tests passing
+**Checkpoint**: All tests passing ✅
 
 ---
 
