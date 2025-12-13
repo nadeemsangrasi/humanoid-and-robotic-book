@@ -225,13 +225,14 @@ class TestHealthEndpoint:
         The timestamp should reflect when the health check was performed,
         not a cached value.
         """
-        # Arrange
-        before_request = datetime.now()
+        # Arrange - Use UTC time since API returns UTC timestamps
+        from datetime import timezone
+        before_request = datetime.now(timezone.utc)
 
         # Act
         response = client.get("/health")
         data = response.json()
-        after_request = datetime.now()
+        after_request = datetime.now(timezone.utc)
 
         # Parse timestamp
         timestamp_str = data["timestamp"]
@@ -239,12 +240,10 @@ class TestHealthEndpoint:
         if timestamp_str.endswith("Z"):
             timestamp_str = timestamp_str[:-1] + "+00:00"
         timestamp = datetime.fromisoformat(timestamp_str)
-        # Remove timezone for comparison
-        timestamp_naive = timestamp.replace(tzinfo=None)
 
-        # Assert - Timestamp is between request start and end
+        # Assert - Timestamp is between request start and end (both in UTC)
         # Allow some tolerance for test execution time
-        assert timestamp_naive >= before_request.replace(microsecond=0)
+        assert timestamp >= before_request.replace(microsecond=0)
 
     def test_health_check_content_type_is_json(
         self,
