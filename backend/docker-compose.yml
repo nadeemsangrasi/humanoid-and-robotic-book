@@ -1,0 +1,96 @@
+# =============================================================================
+# RAG Textbook Chatbot Backend - Docker Compose Configuration
+# =============================================================================
+# Local development environment for the RAG chatbot backend.
+#
+# Usage:
+#   docker-compose up          # Start with logs attached
+#   docker-compose up -d       # Start in detached mode
+#   docker-compose up --build  # Rebuild and start
+#   docker-compose down        # Stop and remove containers
+#   docker-compose logs -f     # Follow logs
+#
+# Prerequisites:
+#   - Copy .env.example to .env and configure API keys
+#   - Docker and Docker Compose installed
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Backend Service
+  # ---------------------------------------------------------------------------
+  # FastAPI + Uvicorn RAG chatbot backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rag-textbook-chatbot:latest
+    container_name: rag-chatbot
+
+    # -------------------------------------------------------------------------
+    # Port Mapping
+    # -------------------------------------------------------------------------
+    # Map container port 7860 to host port 7860
+    # This matches Hugging Face Spaces requirements
+    ports:
+      - "7860:7860"
+
+    # -------------------------------------------------------------------------
+    # Environment Configuration
+    # -------------------------------------------------------------------------
+    # Load environment variables from .env file
+    env_file:
+      - .env
+
+    # Override/supplement with explicit environment variables
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    # -------------------------------------------------------------------------
+    # Volume Mounts (Development Only)
+    # -------------------------------------------------------------------------
+    # Mount app directory as read-only for development inspection
+    # Note: For hot reload, use ./scripts/dev.sh instead
+    volumes:
+      - ./app:/app/app:ro
+
+    # -------------------------------------------------------------------------
+    # Health Check Configuration
+    # -------------------------------------------------------------------------
+    # Ensures container health before marking as ready
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7860/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+    # -------------------------------------------------------------------------
+    # Restart Policy
+    # -------------------------------------------------------------------------
+    # Automatically restart unless explicitly stopped
+    restart: unless-stopped
+
+    # -------------------------------------------------------------------------
+    # Resource Limits (Optional)
+    # -------------------------------------------------------------------------
+    # Uncomment to set resource constraints for local testing
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '1.0'
+    #       memory: 1G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
+
+# =============================================================================
+# Networks (Optional)
+# =============================================================================
+# Uncomment if you need custom network configuration
+# networks:
+#   default:
+#     name: rag-chatbot-network
+#     driver: bridge

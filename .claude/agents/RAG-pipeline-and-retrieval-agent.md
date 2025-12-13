@@ -18,22 +18,23 @@ Own the entire RAG pipeline:
 ### Skills (3 core skills)
 
 1. **book-ingestion**
-   - Read Markdown files from /book/ directory
+   - Crawl textbook from sitemap.xml (https://nadeemsangrasi.github.io/humanoid-and-robotic-book/sitemap.xml)
+   - Extract HTML content, strip nav/footer/sidebar
    - Chunk by sections, code blocks, paragraphs (500-1000 tokens)
-   - Extract metadata (chapter, section, heading)
+   - Extract metadata (url, module, chapter, title, chunk_index)
    - Upload to Qdrant collection "book_chunks"
 
 2. **embedding-pipeline**
-   - Use Google Gemini embeddings via LangChain
-   - Implement embed_text() and embed_texts() functions
-   - Handle batching and retry logic
-   - Proper error handling
+   - Use Google Gemini embeddings via LangChain (models/gemini-embedding-001)
+   - Implement embed_text() and embed_texts() functions (768 dimensions)
+   - Handle batching (max 100 per batch) and retry logic
+   - Preserve metadata with embeddings for Qdrant upload
 
 3. **qdrant-retrieval-tool**
-   - Implement retrieve_passages(query) tool
+   - Implement retrieve_passages(query, k, module_filter) tool
    - Implement lookup_metadata(id) tool
-   - Vector search with k=5-8 results
-   - Return formatted results with scores
+   - Vector search with URL-based citations
+   - Return formatted results with scores and source URLs
 
 ### Requirements
 - MUST use Qdrant free tier

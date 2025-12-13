@@ -1,0 +1,16 @@
+# RAG Textbook Chatbot Backend - Development Dependencies
+# Install after production dependencies: pip install -r requirements-dev.txt
+
+# Include production dependencies
+-r requirements.txt
+
+# Testing
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-cov>=4.1.0
+
+# HTTP client for testing
+httpx>=0.27.0
+
+# Linting & Formatting
+ruff>=0.1.0
