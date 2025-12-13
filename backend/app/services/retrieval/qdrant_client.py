@@ -218,16 +218,18 @@ class QdrantRetriever:
             )
 
             # Execute the search with score threshold
-            # Note: QdrantClient.search is synchronous, but we wrap it for
-            # consistency with the async interface used elsewhere in the app
-            results = self.client.search(
+            # Using query_points API (qdrant-client >= 1.12.0)
+            query_result = self.client.query_points(
                 collection_name=self.collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=k,
                 score_threshold=threshold,
                 query_filter=query_filter,
                 with_payload=True,
             )
+
+            # Extract points from QueryResponse
+            results = query_result.points
 
             logger.info(
                 "Qdrant search completed",
@@ -241,14 +243,14 @@ class QdrantRetriever:
             # Transform results to standardized format with all available metadata
             return [
                 {
-                    "content": hit.payload.get("content", ""),
-                    "url": hit.payload.get("url", ""),
-                    "title": hit.payload.get("title", ""),
+                    "content": hit.payload.get("content", "") if hit.payload else "",
+                    "url": hit.payload.get("url", "") if hit.payload else "",
+                    "title": hit.payload.get("title", "") if hit.payload else "",
                     "score": hit.score,
-                    "heading": hit.payload.get("heading", ""),
-                    "module": hit.payload.get("module", ""),
-                    "chapter": hit.payload.get("chapter", ""),
-                    "chunk_index": hit.payload.get("chunk_index", 0),
+                    "heading": hit.payload.get("heading", "") if hit.payload else "",
+                    "module": hit.payload.get("module", "") if hit.payload else "",
+                    "chapter": hit.payload.get("chapter", "") if hit.payload else "",
+                    "chunk_index": hit.payload.get("chunk_index", 0) if hit.payload else 0,
                 }
                 for hit in results
             ]
