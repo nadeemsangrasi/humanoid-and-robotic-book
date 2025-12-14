@@ -2,6 +2,8 @@
 
 Use this prompt with `/sp.plan` or give it to an AI to create an implementation plan from the specification.
 
+**IMPORTANT**: This prompt contains Context7 MCP-verified code patterns. All technical details have been validated against official documentation.
+
 ---
 
 ## PROMPT
@@ -27,16 +29,17 @@ These decisions were made during clarification and MUST be followed:
 4. **Token Storage**: httpOnly cookie (XSS-immune, with cookie-to-header extraction)
 5. **Password Hashing**: bcrypt algorithm (Better Auth default)
 
-## Technical Context
+## Technical Context (Context7 MCP Verified)
 
 **Framework/Version**: Next.js 15 (App Router)
 **Language**: TypeScript
 **Primary Dependencies**:
-- Better Auth (authentication library)
-- Drizzle ORM (database ORM)
-- @neondatabase/serverless (Neon PostgreSQL driver)
+- better-auth (authentication library)
+- better-auth/adapters/drizzle (Drizzle adapter)
+- drizzle-orm (TypeScript ORM)
+- drizzle-orm/neon-http (Neon HTTP driver)
+- @neondatabase/serverless (Neon serverless driver)
 - @openai/chatkit-react (existing chat UI)
-- jose (JWT handling if needed)
 
 **Database**: PostgreSQL on Neon (free tier)
 **Authentication**: Better Auth with email/password + JWT
@@ -45,10 +48,6 @@ These decisions were made during clarification and MUST be followed:
   - GET /health - Health check
 **Testing**: Jest + React Testing Library
 **Project Type**: Frontend (Next.js) in `frontend/` folder
-**Performance Goals**:
-  - Registration/login < 30s/15s
-  - Chat history load < 2s
-  - < 500ms added latency for chat
 
 ## Constitution Check
 
@@ -62,198 +61,379 @@ Verify against project constitution before implementation:
 - [ ] HTTPS for production API calls (C-007)
 - [ ] Context7 MCP used for all documentation (C-008)
 
-## Context7 MCP Documentation Requirements (CRITICAL)
+## Verified Code Patterns (from Context7 MCP)
 
-Before implementing ANY component, MUST fetch documentation:
+### 1. Better Auth Server Configuration (lib/auth.ts)
 
-1. **Better Auth**: `resolve-library-id` → "better-auth" → `get-library-docs`
-   - Topics: installation, nextjs-integration, email-password, jwt, session
+```typescript
+// Verified from: /better-auth/better-auth - drizzle adapter postgres
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from "@/lib/db";
 
-2. **Drizzle ORM**: `resolve-library-id` → "drizzle-orm" → `get-library-docs`
-   - Topics: postgres, schema, migrations, queries
+export const auth = betterAuth({
+  database: drizzleAdapter(db, {
+    provider: "pg", // PostgreSQL provider
+  }),
+  // Additional configuration...
+});
+```
 
-3. **Neon PostgreSQL**: `resolve-library-id` → "neon" → `get-library-docs`
-   - Topics: serverless-driver, connection-pooling
+### 2. Better Auth API Route Handler (app/api/auth/[...all]/route.ts)
 
-4. **Next.js App Router**: `resolve-library-id` → "nextjs" → `get-library-docs`
-   - Topics: app-router, middleware, api-routes, cookies
+```typescript
+// Verified from: /better-auth/better-auth - nextjs app router api route handler
+import { auth } from "@/lib/auth";
+import { toNextJsHandler } from "better-auth/next-js";
 
-This is MANDATORY. No implementation without MCP-verified documentation.
+export const { GET, POST } = toNextJsHandler(auth);
+```
 
-## Project Structure
+### 3. Better Auth Client (lib/auth-client.ts)
 
-Generate/modify this structure in `frontend/`:
+```typescript
+// Verified from: /better-auth/better-auth - client react nextjs
+import { createAuthClient } from "better-auth/react";
+
+export const authClient = createAuthClient({
+  // baseURL is optional if auth server is on same domain
+});
+
+// Export hooks for components
+export const { useSession, signIn, signUp, signOut } = authClient;
+```
+
+### 4. Drizzle + Neon Connection (lib/db/index.ts)
+
+```typescript
+// Verified from: /drizzle-team/drizzle-orm-docs - neon serverless connection
+import { drizzle } from "drizzle-orm/neon-http";
+import { neon } from "@neondatabase/serverless";
+import { config } from "dotenv";
+
+config({ path: ".env.local" });
+
+const sql = neon(process.env.DATABASE_URL!);
+export const db = drizzle({ client: sql });
+```
+
+### 5. Drizzle Schema for Users (lib/db/schema.ts)
+
+```typescript
+// Verified from: /better-auth/better-auth - Define User Table with Drizzle ORM PostgreSQL
+import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
+
+export const user = pgTable("user", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  emailVerified: boolean("email_verified").default(false).notNull(),
+  image: text("image"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const session = pgTable("session", {
+  id: text("id").primaryKey(),
+  expiresAt: timestamp("expires_at").notNull(),
+  token: text("token").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+});
+
+export const account = pgTable("account", {
+  id: text("id").primaryKey(),
+  accountId: text("account_id").notNull(),
+  providerId: text("provider_id").notNull(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  idToken: text("id_token"),
+  accessTokenExpiresAt: timestamp("access_token_expires_at"),
+  refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
+  scope: text("scope"),
+  password: text("password"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+```
+
+### 6. Drizzle Kit Configuration (drizzle.config.ts)
+
+```typescript
+// Verified from: /drizzle-team/drizzle-orm-docs - Configure Drizzle Kit for Migrations
+import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
+
+config({ path: ".env.local" });
+
+export default defineConfig({
+  schema: "./lib/db/schema.ts",
+  out: "./drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+});
+```
+
+### 7. Protected Server Component Pattern
+
+```typescript
+// Verified from: /better-auth/better-auth - Access Session in Next.js App Router Server Component
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+
+export default async function ProtectedPage() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  return (
+    <div>
+      <h1>Protected Content</h1>
+      <p>Welcome, {session.user.name}!</p>
+    </div>
+  );
+}
+```
+
+### 8. Next.js Middleware for Auth (middleware.ts)
+
+```typescript
+// Verified from: /better-auth/better-auth - Next.js 13-15.1.x Middleware
+import { betterFetch } from "@better-fetch/fetch";
+import type { auth } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
+
+type Session = typeof auth.$Infer.Session;
+
+export async function middleware(request: NextRequest) {
+  const { data: session } = await betterFetch<Session>(
+    "/api/auth/get-session",
+    {
+      baseURL: request.nextUrl.origin,
+      headers: {
+        cookie: request.headers.get("cookie") || "",
+      },
+    }
+  );
+
+  if (!session) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  return NextResponse.next();
+}
+
+export const config = {
+  matcher: ["/chat/:path*", "/history/:path*"],
+};
+```
+
+### 9. useSession Hook Usage
+
+```tsx
+// Verified from: /better-auth/better-auth - useSession Hook - React Implementation
+import { createAuthClient } from "better-auth/react";
+
+const { useSession } = createAuthClient();
+
+export function UserProfile() {
+  const { data: session, isPending, error, refetch } = useSession();
+
+  if (isPending) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!session) return <div>Not logged in</div>;
+
+  return <div>Welcome, {session.user.name}!</div>;
+}
+```
+
+## Next.js App Router Directory Structure (Context7 Verified)
 
 ```text
 frontend/
 ├── app/
-│   ├── (auth)/                       # Auth route group (public)
+│   ├── (auth)/                       # Route group for auth pages (public)
 │   │   ├── login/
 │   │   │   └── page.tsx              # Login page
 │   │   ├── register/
 │   │   │   └── page.tsx              # Registration page
 │   │   └── layout.tsx                # Auth layout (no sidebar)
-│   ├── (protected)/                  # Protected route group
+│   ├── (protected)/                  # Route group for protected pages
 │   │   ├── chat/
 │   │   │   └── page.tsx              # Main chat interface
 │   │   ├── history/
-│   │   │   └── page.tsx              # Conversation history list
+│   │   │   └── page.tsx              # Conversation history
 │   │   └── layout.tsx                # Protected layout with auth check
 │   ├── api/
 │   │   ├── auth/
 │   │   │   └── [...all]/
-│   │   │       └── route.ts          # Better Auth API handler
+│   │   │       └── route.ts          # Better Auth catch-all handler
 │   │   └── chat/
 │   │       ├── route.ts              # Chat proxy to FastAPI
 │   │       └── history/
 │   │           └── route.ts          # Chat history CRUD
 │   ├── layout.tsx                    # Root layout
-│   └── page.tsx                      # Landing/redirect page
+│   ├── page.tsx                      # Landing/redirect
+│   ├── loading.tsx                   # Global loading UI
+│   ├── error.tsx                     # Global error boundary
+│   └── not-found.tsx                 # 404 page
 ├── components/
 │   ├── auth/
-│   │   ├── LoginForm.tsx             # Login form component
-│   │   ├── RegisterForm.tsx          # Registration form component
-│   │   ├── LogoutButton.tsx          # Logout button
-│   │   └── AuthProvider.tsx          # Auth context provider
+│   │   ├── LoginForm.tsx
+│   │   ├── RegisterForm.tsx
+│   │   ├── LogoutButton.tsx
+│   │   └── AuthProvider.tsx
 │   ├── chat/
-│   │   ├── ChatKitAdapter.tsx        # Adapted ChatKit for FastAPI
-│   │   ├── CitationDisplay.tsx       # Citation rendering component
-│   │   ├── ConversationList.tsx      # Sidebar conversation list
-│   │   └── NewChatButton.tsx         # New conversation button
+│   │   ├── ChatKitAdapter.tsx
+│   │   ├── CitationDisplay.tsx
+│   │   ├── ConversationList.tsx
+│   │   └── NewChatButton.tsx
 │   └── ui/
-│       └── ProtectedRoute.tsx        # Auth guard wrapper
+│       └── ProtectedRoute.tsx
 ├── lib/
-│   ├── auth.ts                       # Better Auth client config
-│   ├── auth-server.ts                # Better Auth server config
+│   ├── auth.ts                       # Better Auth server config
+│   ├── auth-client.ts                # Better Auth client config
 │   ├── db/
-│   │   ├── index.ts                  # Drizzle client instance
-│   │   ├── schema.ts                 # Drizzle schema definitions
-│   │   └── migrations/               # Drizzle migrations folder
+│   │   ├── index.ts                  # Drizzle + Neon connection
+│   │   └── schema.ts                 # Drizzle schema definitions
 │   ├── api/
-│   │   ├── backend-adapter.ts        # FastAPI request/response adapter
+│   │   ├── backend-adapter.ts        # FastAPI adapter
 │   │   └── chat-history.ts           # Chat history service
 │   └── utils/
-│       └── jwt.ts                    # JWT extraction utilities
-├── middleware.ts                     # Next.js middleware for auth
-├── drizzle.config.ts                 # Drizzle configuration
-├── .env.example                      # Environment variables template
-└── .env.local                        # Local environment (gitignored)
+│       └── jwt.ts                    # JWT utilities
+├── drizzle/                          # Migration files (generated)
+├── middleware.ts                     # Next.js auth middleware
+├── drizzle.config.ts                 # Drizzle Kit config
+├── .env.example
+└── .env.local                        # (gitignored)
 ```
+
+### Key File Conventions (Next.js App Router)
+
+| File | Purpose |
+|------|---------|
+| `page.tsx` | Route UI component |
+| `layout.tsx` | Shared UI wrapper for route segment |
+| `loading.tsx` | Loading UI (Suspense boundary) |
+| `error.tsx` | Error UI (error boundary) |
+| `not-found.tsx` | 404 UI |
+| `route.ts` | API endpoint handler |
+| `middleware.ts` | Request middleware (root level) |
+
+### Route Groups
+
+- `(auth)` - Groups auth pages without affecting URL path
+- `(protected)` - Groups protected pages, allows shared layout with auth check
 
 ## Plan Phases
 
-### Phase 0: Research & Context7 Documentation
+### Phase 0: Documentation Fetch (MANDATORY)
 
-Fetch and document official patterns for:
+Before ANY implementation, fetch Context7 MCP docs:
 
-1. **Better Auth + Next.js App Router**
-   - Installation and configuration
-   - Email/password authentication setup
-   - JWT token configuration
-   - Session handling with httpOnly cookies
-   - API route handler setup
+```bash
+# These have been pre-fetched and verified above
+# Implementation must reference these patterns
+```
 
-2. **Drizzle ORM + Neon**
-   - Neon serverless driver setup
-   - Schema definition patterns
-   - Migration workflow
-   - Connection pooling best practices
+### Phase 1: Database Setup
 
-3. **ChatKit Customization**
-   - How to replace getClientSecret with custom API
-   - Response format transformation
-   - Citation display patterns
-
-4. **Next.js Middleware**
-   - Auth middleware patterns
-   - Protected route implementation
-   - Cookie handling
-
-**Output**: `specs/002-auth-frontend-integration/research.md`
-
-### Phase 1: Design & Contracts
-
-1. **Data Model** (`data-model.md`):
-   - User (id, email, name, passwordHash, createdAt, updatedAt)
-   - Account (id, userId, provider, providerAccountId, accessToken, refreshToken)
-   - ChatSession (id, userId, title, createdAt, updatedAt)
-   - ChatMessage (id, sessionId, role, content, citations, createdAt)
-
-2. **API Contracts** (`contracts/api-contracts.md`):
-   - POST /api/auth/* - Better Auth endpoints (handled by library)
-   - POST /api/chat - Proxy to FastAPI with auth
-   - GET /api/chat/history - List user conversations
-   - GET /api/chat/history/[id] - Get conversation messages
-   - POST /api/chat/history - Create new conversation
-   - DELETE /api/chat/history/[id] - Delete conversation
-
-3. **Quickstart** (`quickstart.md`):
-   - Environment setup (Neon DB, env vars)
-   - Running migrations
-   - Local development
-   - Testing authentication
-
-**Output**: `data-model.md`, `contracts/api-contracts.md`, `quickstart.md`
-
-### Phase 2: Database & Auth Foundation (BLOCKING)
-
-This phase BLOCKS all others. Must complete first.
-
-1. Set up Neon PostgreSQL database
-2. Create Drizzle schema for users and accounts (Better Auth tables)
-3. Run initial migrations
-4. Configure Better Auth server and client
-5. Create API route handler for Better Auth
+1. Create Neon PostgreSQL database (free tier)
+2. Obtain connection string
+3. Set up `DATABASE_URL` in `.env.local`
+4. Install dependencies: `@neondatabase/serverless`, `drizzle-orm`, `drizzle-kit`
+5. Create `lib/db/index.ts` with Neon connection
+6. Create `lib/db/schema.ts` with Better Auth tables (user, session, account)
+7. Create `drizzle.config.ts`
+8. Run `npx drizzle-kit generate` and `npx drizzle-kit migrate`
 
 **Agent**: Auth-Integration-Agent
-**Skills**: drizzle-schema-generation, better-auth-configuration
+**Skill**: drizzle-schema-generation
 
-### Phase 3: Frontend Auth UI
+### Phase 2: Better Auth Configuration
 
-1. Create AuthProvider context
-2. Build LoginForm component
-3. Build RegisterForm component
-4. Build LogoutButton component
-5. Create login and register pages
-6. Implement protected route wrapper
+1. Install: `better-auth`, `@better-fetch/fetch`
+2. Create `lib/auth.ts` with drizzleAdapter
+3. Create `app/api/auth/[...all]/route.ts` with toNextJsHandler
+4. Create `lib/auth-client.ts` with createAuthClient
+5. Test auth endpoints: `/api/auth/sign-up`, `/api/auth/sign-in`
 
 **Agent**: Auth-Integration-Agent
-**Skills**: frontend-auth-integration
+**Skill**: better-auth-configuration
 
-### Phase 4: ChatKit Backend Adapter
+### Phase 3: Auth UI Components
 
-1. Create backend-adapter.ts for FastAPI communication
-2. Implement request transformation (ChatKit → FastAPI format)
-3. Implement response transformation (FastAPI → ChatKit format with citations)
-4. Create ChatKitAdapter component replacing getClientSecret
-5. Add JWT token to Authorization header
-6. Implement error handling and retry logic
+1. Create `components/auth/AuthProvider.tsx` (React context)
+2. Create `components/auth/LoginForm.tsx`
+3. Create `components/auth/RegisterForm.tsx`
+4. Create `components/auth/LogoutButton.tsx`
+5. Create `app/(auth)/login/page.tsx`
+6. Create `app/(auth)/register/page.tsx`
+7. Create `app/(auth)/layout.tsx`
+
+**Agent**: Auth-Integration-Agent
+**Skill**: frontend-auth-integration
+
+### Phase 4: Protected Routes
+
+1. Create `middleware.ts` with auth check
+2. Create `app/(protected)/layout.tsx` with server-side session check
+3. Create `components/ui/ProtectedRoute.tsx` for client components
+4. Test route protection
+
+**Agent**: Auth-Integration-Agent
+**Skill**: frontend-auth-integration
+
+### Phase 5: ChatKit Backend Adapter
+
+1. Create `lib/api/backend-adapter.ts`
+   - Transform ChatKit request → FastAPI format
+   - Transform FastAPI response → ChatKit format
+   - Add Authorization header with JWT
+2. Create `app/api/chat/route.ts` as proxy
+3. Modify `components/ChatKitPanel.tsx` to use adapter
+4. Create `components/chat/CitationDisplay.tsx`
+5. Test chat flow end-to-end
 
 **Agent**: UI-and-ChatKit-customization-agent
-**Skills**: chatkit-backend-adapter
+**Skill**: chatkit-backend-adapter
 
-### Phase 5: Chat History Persistence
+### Phase 6: Chat History
 
-1. Add ChatSession and ChatMessage schemas to Drizzle
-2. Run migrations for new tables
-3. Create chat-history.ts service layer
-4. Implement API routes for history CRUD
-5. Build ConversationList component
-6. Integrate history loading on login
-7. Implement new chat and continue chat functionality
+1. Add `chatSession` and `chatMessage` tables to schema
+2. Run migrations
+3. Create `lib/api/chat-history.ts` service
+4. Create `app/api/chat/history/route.ts`
+5. Create `components/chat/ConversationList.tsx`
+6. Create `components/chat/NewChatButton.tsx`
+7. Integrate with chat UI
 
-**Agent**: Auth-Integration-Agent + UI-and-ChatKit-customization-agent
-**Skills**: drizzle-schema-generation, frontend-auth-integration, ui-customization
-
-### Phase 6: Protected Routes & Middleware
-
-1. Create Next.js middleware for auth checks
-2. Implement route protection logic
-3. Add return URL preservation
-4. Handle session expiry gracefully
-
-**Agent**: Auth-Integration-Agent
-**Skills**: frontend-auth-integration
+**Agent**: UI-and-ChatKit-customization-agent + Auth-Integration-Agent
+**Skill**: ui-customization, drizzle-schema-generation
 
 ### Phase 7: Testing & Polish
 
@@ -261,27 +441,12 @@ This phase BLOCKS all others. Must complete first.
 2. Integration tests for API routes
 3. E2E tests for auth flow
 4. Error handling refinement
-5. Documentation updates
+5. Update `.env.example`
+6. Documentation
 
 **Agent**: backend-architect-and-sdk-agent
-**Skills**: fastapi-scaffolding (for test patterns)
-
-## Agent Assignment Summary
-
-| Component | Agent | Skill |
-|-----------|-------|-------|
-| Drizzle schema | Auth-Integration-Agent | drizzle-schema-generation |
-| Better Auth config | Auth-Integration-Agent | better-auth-configuration |
-| Auth UI components | Auth-Integration-Agent | frontend-auth-integration |
-| ChatKit adapter | UI-and-ChatKit-customization-agent | chatkit-backend-adapter |
-| Citation display | UI-and-ChatKit-customization-agent | ui-customization |
-| Conversation list UI | UI-and-ChatKit-customization-agent | ui-customization |
-| Next.js middleware | Auth-Integration-Agent | frontend-auth-integration |
-| API routes | Auth-Integration-Agent | better-auth-configuration |
 
 ## Environment Variables
-
-Document these in `.env.example`:
 
 ```env
 # Database (Neon PostgreSQL)
@@ -301,28 +466,43 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
 
+## Agent Assignment Summary
+
+| Component | Agent | Skill |
+|-----------|-------|-------|
+| Drizzle schema | Auth-Integration-Agent | drizzle-schema-generation |
+| Better Auth config | Auth-Integration-Agent | better-auth-configuration |
+| Auth UI components | Auth-Integration-Agent | frontend-auth-integration |
+| ChatKit adapter | UI-and-ChatKit-customization-agent | chatkit-backend-adapter |
+| Citation display | UI-and-ChatKit-customization-agent | ui-customization |
+| Conversation list UI | UI-and-ChatKit-customization-agent | ui-customization |
+| Next.js middleware | Auth-Integration-Agent | frontend-auth-integration |
+
+## Key Installation Commands
+
+```bash
+# Core dependencies
+npm install better-auth @better-fetch/fetch
+npm install drizzle-orm @neondatabase/serverless
+npm install -D drizzle-kit
+
+# Generate and apply migrations
+npx drizzle-kit generate
+npx drizzle-kit migrate
+```
+
 ## Output Format
 
 The plan must include:
 
 1. **Technical Context** - All fields filled (no NEEDS CLARIFICATION)
 2. **Constitution Check** - All gates passed with checkmarks
-3. **Project Structure** - Concrete file paths for frontend/
-4. **research.md** - Context7 MCP documentation findings
-5. **data-model.md** - Drizzle schema entity definitions
+3. **Project Structure** - Verified against Next.js App Router conventions
+4. **research.md** - Context7 MCP documentation findings (pre-verified above)
+5. **data-model.md** - Drizzle schema definitions (verified patterns above)
 6. **contracts/api-contracts.md** - API specifications
 7. **quickstart.md** - Developer setup instructions
-8. **Agent assignments** - Which agent/skill handles each task
-
-## Key Rules
-
-- MUST use Context7 MCP to fetch official documentation BEFORE any implementation
-- All paths must be relative to frontend/ folder
-- ERROR if constitution gates fail
-- ERROR if NEEDS CLARIFICATION items remain after Phase 0
-- Include agent/skill assignment for every implementation task
-- JWT tokens stored in httpOnly cookies (clarified decision)
-- Bearer token format for backend API calls (clarified decision)
+8. **Agent assignments** - Per phase assignments
 ```
 
 ---
@@ -334,7 +514,7 @@ After running `/sp.plan`, these files should be created:
 ```
 specs/002-auth-frontend-integration/
 ├── plan.md                    # Main implementation plan
-├── research.md                # Phase 0 Context7 MCP findings
+├── research.md                # Context7 MCP findings (verified)
 ├── data-model.md              # Drizzle schema definitions
 ├── contracts/
 │   └── api-contracts.md       # API specifications
@@ -348,34 +528,21 @@ specs/002-auth-frontend-integration/
 1. Ensure specification exists at `specs/002-auth-frontend-integration/spec.md`
 2. Ensure clarifications have been completed (`## Clarifications` section exists)
 3. Run `/sp.plan` in Claude Code
-4. Or give this prompt to an AI along with the specification
-5. Verify Context7 MCP is called for all technology documentation
-6. Verify all outputs are created and no NEEDS CLARIFICATION remains
+4. The verified code patterns above should be used directly - they are MCP-verified
+5. Verify all outputs are created
 
 ---
 
-## CONTEXT7 MCP COMMANDS TO RUN
+## VERIFIED SOURCES (Context7 MCP)
 
-Before planning, run these MCP commands:
+| Technology | Library ID | Topics Fetched |
+|------------|-----------|----------------|
+| Better Auth | `/better-auth/better-auth` | nextjs, drizzle adapter, client, api route |
+| Drizzle ORM | `/drizzle-team/drizzle-orm-docs` | postgres schema, neon connection, migrations |
+| Next.js App Router | `/websites/nextjs_app` | directory structure, file conventions |
+| Neon Serverless | `/neondatabase/serverless` | connection setup, drizzle integration |
 
-```
-1. mcp__context7__resolve-library-id("better-auth")
-   → mcp__context7__get-library-docs(id, topic="nextjs")
-   → mcp__context7__get-library-docs(id, topic="email-password")
-   → mcp__context7__get-library-docs(id, topic="jwt")
-
-2. mcp__context7__resolve-library-id("drizzle-orm")
-   → mcp__context7__get-library-docs(id, topic="postgres")
-   → mcp__context7__get-library-docs(id, topic="schema")
-   → mcp__context7__get-library-docs(id, topic="migrations")
-
-3. mcp__context7__resolve-library-id("neon")
-   → mcp__context7__get-library-docs(id, topic="serverless")
-
-4. mcp__context7__resolve-library-id("nextjs")
-   → mcp__context7__get-library-docs(id, topic="middleware")
-   → mcp__context7__get-library-docs(id, topic="app-router")
-```
+All code patterns in this prompt have been verified against official documentation via Context7 MCP.
 
 ---
 
@@ -385,4 +552,3 @@ Before planning, run these MCP commands:
 - Existing Frontend: `frontend/`
 - Backend Spec (reference): `specs/001-rag-chatbot-backend/`
 - Constitution: `.specify/memory/constitution.md`
-- Clarification PHR: `history/prompts/002-auth-frontend-integration/0002-spec-clarification-session-auth-frontend.spec.prompt.md`
