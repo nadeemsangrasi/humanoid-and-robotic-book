@@ -76,13 +76,16 @@ def truncate_snippet(content: str, max_length: int = 200) -> str:
     if len(content) <= max_length:
         return content
 
-    # Truncate to max_length and find last word boundary
-    truncated = content[:max_length]
+    # Reserve space for ellipsis
+    truncate_at = max_length - 3
+
+    # Truncate and find last word boundary
+    truncated = content[:truncate_at]
 
     # Find the last space to avoid cutting words
     last_space = truncated.rfind(" ")
 
-    if last_space > max_length // 2:
+    if last_space > truncate_at // 2:
         # Use word boundary if it's not too far back
         truncated = truncated[:last_space]
 

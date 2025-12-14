@@ -557,7 +557,7 @@ class TestChatHelperFunctions:
         result = truncate_snippet(long_text, max_length=50)
 
         # Assert
-        assert len(result) <= 53  # max_length + "..."
+        assert len(result) <= 50  # Must fit within max_length including ellipsis
         assert result.endswith("...")
 
     def test_truncate_snippet_handles_empty_content(self):
