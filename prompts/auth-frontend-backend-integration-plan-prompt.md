@@ -77,66 +77,97 @@ The following patterns have been verified against official documentation. Use th
 | Next.js Middleware | `/better-auth/better-auth` | Use `betterFetch("/api/auth/get-session")` with cookie forwarding |
 | useSession Hook | `/better-auth/better-auth` | Returns `{ data, isPending, error, refetch }` |
 
-## Next.js App Router Directory Structure (Context7 Verified)
+## Existing Frontend Structure (OpenAI ChatKit Starter)
+
+The frontend already has Next.js 15 with OpenAI ChatKit initialized:
 
 ```text
-frontend/
+frontend/                            # EXISTING FILES
 ├── app/
-│   ├── (auth)/                       # Route group for auth pages (public)
-│   │   ├── login/
-│   │   │   └── page.tsx
-│   │   ├── register/
-│   │   │   └── page.tsx
-│   │   └── layout.tsx
-│   ├── (protected)/                  # Route group for protected pages
-│   │   ├── chat/
-│   │   │   └── page.tsx
-│   │   ├── history/
-│   │   │   └── page.tsx
-│   │   └── layout.tsx
 │   ├── api/
-│   │   ├── auth/
-│   │   │   └── [...all]/
-│   │   │       └── route.ts          # Better Auth catch-all handler
-│   │   └── chat/
-│   │       ├── route.ts
-│   │       └── history/
-│   │           └── route.ts
-│   ├── layout.tsx
-│   ├── page.tsx
-│   ├── loading.tsx
-│   ├── error.tsx
-│   └── not-found.tsx
+│   │   └── create-session/
+│   │       └── route.ts             # ChatKit session endpoint (existing)
+│   ├── App.tsx                      # Main app component (client)
+│   ├── favicon.ico
+│   ├── globals.css
+│   ├── layout.tsx                   # Root layout
+│   └── page.tsx                     # Home page (renders App)
+├── components/
+│   ├── ChatKitPanel.tsx             # Main ChatKit component (to modify)
+│   └── ErrorOverlay.tsx             # Error display component
+├── hooks/
+│   └── useColorScheme.ts            # Theme hook
+├── lib/
+│   └── config.ts                    # ChatKit config (workflow ID, prompts)
+├── public/
+│   └── docs/
+│       └── workflow.jpg
+├── .env.example                     # Existing: OPENAI_API_KEY, NEXT_PUBLIC_CHATKIT_WORKFLOW_ID
+├── next.config.ts
+├── package.json                     # Next.js 15.5.4, React 19.2.0, @openai/chatkit-react
+├── postcss.config.mjs
+├── eslint.config.mjs
+└── tsconfig.json
+```
+
+## New Files to Add (Auth + Backend Adapter)
+
+```text
+frontend/                            # NEW FILES TO CREATE
+├── app/
+│   ├── (auth)/                      # Route group for auth pages (public)
+│   │   ├── login/
+│   │   │   └── page.tsx             # NEW: Login page
+│   │   ├── register/
+│   │   │   └── page.tsx             # NEW: Register page
+│   │   └── layout.tsx               # NEW: Auth layout
+│   ├── (protected)/                 # Route group for protected pages
+│   │   ├── chat/
+│   │   │   └── page.tsx             # NEW: Protected chat page
+│   │   ├── history/
+│   │   │   └── page.tsx             # NEW: Chat history page
+│   │   └── layout.tsx               # NEW: Protected layout with auth check
+│   └── api/
+│       ├── auth/
+│       │   └── [...all]/
+│       │       └── route.ts         # NEW: Better Auth catch-all handler
+│       └── chat/
+│           ├── route.ts             # NEW: Backend proxy endpoint
+│           └── history/
+│               └── route.ts         # NEW: Chat history endpoint
 ├── components/
 │   ├── auth/
-│   │   ├── LoginForm.tsx
-│   │   ├── RegisterForm.tsx
-│   │   ├── LogoutButton.tsx
-│   │   └── AuthProvider.tsx
-│   ├── chat/
-│   │   ├── ChatKitAdapter.tsx
-│   │   ├── CitationDisplay.tsx
-│   │   ├── ConversationList.tsx
-│   │   └── NewChatButton.tsx
-│   └── ui/
-│       └── ProtectedRoute.tsx
+│   │   ├── LoginForm.tsx            # NEW
+│   │   ├── RegisterForm.tsx         # NEW
+│   │   ├── LogoutButton.tsx         # NEW
+│   │   └── AuthProvider.tsx         # NEW
+│   └── chat/
+│       ├── CitationDisplay.tsx      # NEW
+│       ├── ConversationList.tsx     # NEW
+│       └── NewChatButton.tsx        # NEW
 ├── lib/
-│   ├── auth.ts                       # Better Auth server config
-│   ├── auth-client.ts                # Better Auth client config
+│   ├── auth.ts                      # NEW: Better Auth server config
+│   ├── auth-client.ts               # NEW: Better Auth client config
 │   ├── db/
-│   │   ├── index.ts                  # Drizzle + Neon connection
-│   │   └── schema.ts                 # Drizzle schema definitions
-│   ├── api/
-│   │   ├── backend-adapter.ts
-│   │   └── chat-history.ts
-│   └── utils/
-│       └── jwt.ts
-├── drizzle/                          # Migration files (generated)
-├── middleware.ts
-├── drizzle.config.ts
-├── .env.example
-└── .env.local                        # (gitignored)
+│   │   ├── index.ts                 # NEW: Drizzle + Neon connection
+│   │   └── schema.ts                # NEW: Drizzle schema definitions
+│   └── api/
+│       ├── backend-adapter.ts       # NEW: FastAPI request/response adapter
+│       └── chat-history.ts          # NEW: Chat history service
+├── drizzle/                         # NEW: Migration files (generated)
+├── middleware.ts                    # NEW: Auth middleware
+└── drizzle.config.ts                # NEW: Drizzle Kit config
 ```
+
+## Files to Modify
+
+| File | Modification |
+|------|-------------|
+| `components/ChatKitPanel.tsx` | Replace `getClientSecret` with backend adapter, add auth headers |
+| `lib/config.ts` | Add `BACKEND_URL` config, update session endpoint |
+| `app/layout.tsx` | Wrap with `AuthProvider` |
+| `.env.example` | Add `DATABASE_URL`, `BETTER_AUTH_SECRET`, `NEXT_PUBLIC_BACKEND_URL` |
+| `package.json` | Add `better-auth`, `drizzle-orm`, `@neondatabase/serverless` |
 
 ### Key File Conventions (Next.js App Router)
 
@@ -144,16 +175,13 @@ frontend/
 |------|---------|
 | `page.tsx` | Route UI component |
 | `layout.tsx` | Shared UI wrapper for route segment |
-| `loading.tsx` | Loading UI (Suspense boundary) |
-| `error.tsx` | Error UI (error boundary) |
-| `not-found.tsx` | 404 UI |
 | `route.ts` | API endpoint handler |
 | `middleware.ts` | Request middleware (root level) |
 
 ### Route Groups
 
-- `(auth)` - Groups auth pages without affecting URL path
-- `(protected)` - Groups protected pages, allows shared layout with auth check
+- `(auth)` - Groups auth pages without affecting URL path (login, register)
+- `(protected)` - Groups protected pages with shared auth check layout
 
 ## Plan Phases
 
@@ -211,10 +239,13 @@ frontend/
    - Transform ChatKit request → FastAPI format
    - Transform FastAPI response → ChatKit format
    - Add Authorization header with JWT
-2. Create `app/api/chat/route.ts` as proxy
-3. Modify `components/ChatKitPanel.tsx` to use adapter
-4. Create `components/chat/CitationDisplay.tsx`
-5. Test chat flow end-to-end
+2. Create `app/api/chat/route.ts` as proxy to FastAPI backend
+3. Modify existing `components/ChatKitPanel.tsx`:
+   - Replace OpenAI workflow session with backend adapter
+   - Keep existing theme, error handling, and widget action logic
+4. Update `lib/config.ts` to add `BACKEND_URL` config
+5. Create `components/chat/CitationDisplay.tsx` for RAG citations
+6. Test chat flow end-to-end with FastAPI backend
 
 **Agent**: UI-and-ChatKit-customization-agent
 **Skill**: chatkit-backend-adapter
