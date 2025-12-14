@@ -1,6 +1,6 @@
 ---
 title: Physical AI Textbook Chatbot
-emoji: "R"
+emoji: 🤖
 colorFrom: blue
 colorTo: purple
 sdk: docker
