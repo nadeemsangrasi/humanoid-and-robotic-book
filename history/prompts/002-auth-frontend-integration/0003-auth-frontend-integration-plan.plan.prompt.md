@@ -9,7 +9,7 @@ feature: 002-auth-frontend-integration
 branch: 002-auth-frontend-integration
 user: nadeemsangrasi
 command: /sp.plan
-labels: ["authentication", "better-auth", "drizzle", "chatkit", "implementation-plan", "context7"]
+labels: ["authentication", "better-auth", "drizzle", "chatkit", "implementation-plan", "context7", "backend-middleware", "jwt", "fastapi", "pyjwt"]
 links:
   spec: specs/002-auth-frontend-integration/spec.md
   ticket: null
@@ -35,6 +35,7 @@ Key requirements:
 - ChatKit Backend Adapter to connect to FastAPI RAG backend
 - Chat History Persistence with user conversations
 - Protected Routes with Next.js middleware
+- Backend Authentication Middleware (US10) - FastAPI middleware to verify JWT tokens using PyJWT
 
 Clarified decisions from /sp.clarify:
 1. Session Storage: JWT tokens (stateless)
@@ -42,13 +43,15 @@ Clarified decisions from /sp.clarify:
 3. Backend URL Config: `NEXT_PUBLIC_BACKEND_URL`
 4. Token Storage: httpOnly cookie
 5. Password Hashing: bcrypt
+6. Backend JWT Secret: Shared `BETTER_AUTH_SECRET` between frontend and backend
 
 Technical Context:
 - Framework: Next.js 15 (App Router)
-- Language: TypeScript
+- Language: TypeScript (frontend), Python (backend)
 - Database: PostgreSQL on Neon (free tier)
 - Authentication: Better Auth with Drizzle adapter
 - Chat UI: OpenAI ChatKit React (existing)
+- Backend: FastAPI with PyJWT for JWT validation
 
 ## Response snapshot
 
@@ -82,19 +85,20 @@ Generated comprehensive implementation plan with the following artifacts:
 - Verification steps
 
 **5. plan.md** - Main implementation plan:
-- 6 implementation phases
+- 7 implementation phases (including Phase 5.5 for Backend Auth Middleware)
 - Constitution check (8/8 gates passed)
-- Project structure (new and modified files)
-- Agent assignments per phase
-- Risks and mitigations
+- Project structure (new and modified files for both frontend and backend)
+- Agent assignments per phase (including backend-architect-and-sdk-agent for US10)
+- Risks and mitigations (including JWT secret mismatch and clock skew)
+- Backend project structure with new files (security.py, auth.py middleware, auth.py dependency)
 
 ## Outcome
 
-- ✅ Impact: Complete implementation plan ready for task generation
-- 🧪 Tests: Constitution check passed all 8 gates; Context7 documentation verified for Better Auth, Drizzle ORM, Neon, Next.js
+- ✅ Impact: Complete implementation plan ready for task generation (including backend auth middleware for US10)
+- 🧪 Tests: Constitution check passed all 8 gates; Context7 documentation verified for Better Auth, Drizzle ORM, Neon, Next.js, FastAPI, PyJWT
 - 📁 Files: 5 plan artifacts created (plan.md, research.md, data-model.md, quickstart.md, contracts/api-contracts.md)
 - 🔁 Next prompts: /sp.tasks to generate detailed task list with acceptance criteria
-- 🧠 Reflection: Plan follows mandatory technology stack per constitution. All patterns verified via Context7 MCP ensuring up-to-date implementation guidance.
+- 🧠 Reflection: Plan follows mandatory technology stack per constitution. All patterns verified via Context7 MCP ensuring up-to-date implementation guidance. Backend auth middleware (US10) uses shared JWT secret for stateless token validation.
 
 ## Evaluation notes (flywheel)
 

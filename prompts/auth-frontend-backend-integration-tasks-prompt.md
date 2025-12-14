@@ -105,14 +105,37 @@ Generate tasks for:
 - T-035: Create history page (app/(protected)/history/page.tsx)
 - T-036: Integrate history with chat UI
 
-### Phase 6: Testing & Polish
+### Phase 6: Backend Authentication Middleware (US10 - P1 Critical)
 
 Generate tasks for:
-- T-037: Unit tests for auth components
-- T-038: Integration tests for API routes
-- T-039: E2E tests for auth flow
-- T-040: Update .env.example
-- T-041: Final documentation updates
+- T-058: Install PyJWT dependency in backend
+- T-059: Add BETTER_AUTH_SECRET to backend config
+- T-060: Update backend .env.example with BETTER_AUTH_SECRET
+- T-061: Create JWT validation utilities (backend/app/core/security.py)
+- T-062: Create authentication middleware (backend/app/middleware/auth.py)
+- T-063: Create get_current_user FastAPI dependency (backend/app/dependencies/auth.py)
+- T-064: Modify chat endpoint to require authentication
+- T-065: Add authentication failure logging
+
+### Phase 7: Testing & Polish
+
+Generate tasks for:
+- T-066: Unit tests for auth components (frontend)
+- T-067: Unit tests for chat components (frontend)
+- T-068: Unit tests for backend JWT validation
+- T-069: Integration tests for frontend auth API routes
+- T-070: Integration tests for frontend chat API routes
+- T-071: Integration tests for chat history API routes
+- T-072: Integration tests for backend auth middleware
+- T-073: E2E test for registration flow
+- T-074: E2E test for login flow
+- T-075: E2E test for chat flow
+- T-076: Update frontend .env.example
+- T-077: Update backend .env.example
+- T-078: Validate quickstart.md setup guide
+- T-079: Review and improve error messages
+- T-080: Add loading states and retry functionality
+- T-081: Final code review and TypeScript/Python error fixes
 
 ## Task Dependencies
 
@@ -140,10 +163,17 @@ T-033, T-034 (parallel, depend on T-032)
 T-035 (depends on T-033)
 T-036 (depends on T-034, T-035)
 
-Phase 6 (Testing) - depends on T-036:
-T-037, T-038, T-039 (parallel)
-T-040 (depends on all tests)
-T-041 (depends on T-040)
+Phase 6 (Backend Auth Middleware - US10) - can start after T-002, runs parallel with frontend phases:
+T-058 → T-059, T-060 (parallel)
+T-059 → T-061 → T-062 → T-063 → T-064
+T-062 → T-065
+
+Phase 7 (Testing) - depends on T-036 and T-065:
+T-066, T-067, T-068 (parallel - unit tests)
+T-069, T-070, T-071, T-072 (parallel - integration tests)
+T-073 → T-074 → T-075 (E2E tests - sequential)
+T-076, T-077, T-078 (parallel - docs)
+T-079, T-080, T-081 (sequential - polish)
 ```
 
 ## Critical Implementation Notes
@@ -171,22 +201,39 @@ Better Auth requires specific table names:
 
 ### Environment Variables
 
-Required in `.env.local`:
+Required in frontend `.env.local`:
 ```env
 DATABASE_URL=postgresql://...
-BETTER_AUTH_SECRET=...
+BETTER_AUTH_SECRET=your-secure-secret-key-min-32-chars
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_BACKEND_URL=https://...
 ```
+
+Required in backend `.env`:
+```env
+# MUST match frontend BETTER_AUTH_SECRET
+BETTER_AUTH_SECRET=your-secure-secret-key-min-32-chars
+```
+
+### Backend Auth Middleware Implementation (T-061 to T-065)
+
+Key implementation details for US10:
+1. Use PyJWT for token validation
+2. Extract token from `Authorization: Bearer <token>` header
+3. Validate signature using `BETTER_AUTH_SECRET`
+4. Check token expiration with reasonable clock skew tolerance (60 seconds)
+5. Return 401 Unauthorized for all auth failures (don't reveal specific reason)
+6. Log failures with request metadata but no sensitive data
 
 ## Output Format
 
 Generate `specs/002-auth-frontend-integration/tasks.md` with:
 
-1. **Summary table** of all tasks with status columns
-2. **Detailed task definitions** following the format above
-3. **Dependency graph** in mermaid or ASCII format
-4. **Agent workload summary** showing tasks per agent
+1. **Summary table** of all 67 tasks with status columns
+2. **Detailed task definitions** following the format above (including Phase 6 for US10)
+3. **Dependency graph** in mermaid or ASCII format (showing backend tasks can run in parallel)
+4. **Agent workload summary** showing tasks per agent (Auth-Integration: 25, UI-ChatKit: 16, backend-architect: 23)
+5. **File creation summary** (27 frontend files, 5 backend files, 8 test files, 6 modified files)
 ```
 
 ---
@@ -197,7 +244,7 @@ After running `/sp.tasks`, this file should be created:
 
 ```
 specs/002-auth-frontend-integration/
-└── tasks.md                    # Detailed task list with 41 tasks
+└── tasks.md                    # Detailed task list with 67 tasks (including 8 for US10 backend auth middleware)
 ```
 
 ---

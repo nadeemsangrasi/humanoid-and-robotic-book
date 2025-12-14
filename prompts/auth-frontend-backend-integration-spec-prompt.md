@@ -24,6 +24,7 @@ The ChatKit frontend currently uses OpenAI's workflow-based sessions (NEXT_PUBLI
 1. Add user authentication (Better Auth + PostgreSQL Neon DB + Drizzle ORM)
 2. Customize ChatKit to connect to our FastAPI backend instead of OpenAI
 3. Add chat history persistence and protected routes
+4. Add backend authentication middleware (FastAPI middleware to verify JWT tokens)
 
 ### Technology Stack (MANDATORY)
 - **Authentication**: Better Auth (https://better-auth.com/)
@@ -31,6 +32,7 @@ The ChatKit frontend currently uses OpenAI's workflow-based sessions (NEXT_PUBLI
 - **ORM**: Drizzle ORM - https://orm.drizzle.team/
 - **Frontend Framework**: Next.js 15 (already in place)
 - **UI Components**: OpenAI ChatKit React - https://github.com/openai/chatkit
+- **Backend JWT Validation**: PyJWT (shared BETTER_AUTH_SECRET with frontend)
 
 ## What This Specification Must Cover
 
@@ -96,6 +98,27 @@ The ChatKit frontend currently uses OpenAI's workflow-based sessions (NEXT_PUBLI
 - "New Chat" functionality
 - Conversation list sidebar (optional for MVP)
 
+### 4. Backend Authentication Middleware (US10 - P1 Critical)
+
+**JWT Token Validation:**
+- FastAPI middleware to intercept all protected routes
+- Extract JWT token from `Authorization: Bearer <token>` header
+- Validate token signature using shared `BETTER_AUTH_SECRET`
+- Verify token expiration and reject expired tokens
+
+**User Context:**
+- Extract user ID from validated token payload
+- Make user context available to route handlers via dependency injection
+- Log authentication failures (without sensitive data) for security monitoring
+
+**Error Handling:**
+- Return 401 Unauthorized for missing, invalid, or expired tokens
+- Do not reveal specific validation failure reasons (security best practice)
+
+**Configuration:**
+- Share `BETTER_AUTH_SECRET` between frontend and backend via environment variable
+- Add PyJWT dependency to backend requirements
+
 ## Constraints (MUST Follow)
 
 ### Technical Constraints
@@ -121,13 +144,14 @@ The ChatKit frontend currently uses OpenAI's workflow-based sessions (NEXT_PUBLI
 Follow SpecKit Plus format with these mandatory sections:
 
 ### User Scenarios & Testing
-Write 8 user stories with priorities (P1, P2, P3):
+Write 10 user stories with priorities (P1, P2, P3):
 
 **P1 - Critical (Must Have for MVP):**
 - User registers and logs into the chatbot
 - User asks questions through authenticated chat interface
 - Chat interface connects to custom FastAPI backend (not OpenAI)
 - User session persists across page refreshes
+- **Backend validates JWT tokens and secures API endpoints (US10)**
 
 **P2 - Important (Enhances Value):**
 - User views and continues previous chat conversations
@@ -145,7 +169,7 @@ Each story must include:
 - Acceptance scenarios (Given/When/Then format)
 
 ### Functional Requirements
-List FR-001 through FR-030+ covering:
+List FR-001 through FR-044+ covering:
 
 **Authentication (FR-001 to FR-010):**
 - User registration with email/password
@@ -188,6 +212,16 @@ List FR-001 through FR-030+ covering:
 - Preserve return URL after login
 - Handle session expiry gracefully
 
+**Backend Authentication Middleware (FR-037 to FR-044):**
+- FastAPI middleware to intercept all protected routes
+- Extract JWT token from Authorization header
+- Validate JWT token signature using shared BETTER_AUTH_SECRET
+- Verify token expiration and reject expired tokens
+- Extract user ID from token payload
+- Make user context available to route handlers
+- Return 401 Unauthorized for invalid tokens
+- Log authentication failures for security monitoring
+
 ### Key Entities
 Define these without implementation details:
 
@@ -218,13 +252,21 @@ Measurable, technology-agnostic outcomes:
 - SC-008: Users see their previous conversations within 2 seconds of login
 - SC-009: Chat history persists correctly across browser sessions
 
+**Backend Authentication Middleware:**
+- SC-014: Backend middleware validates tokens in under 10ms average latency
+- SC-015: 100% of requests without valid tokens return 401 Unauthorized
+- SC-016: 100% of requests with valid tokens include user context in route handlers
+- SC-017: Authentication failures are logged with request metadata (no sensitive data)
+- SC-018: Backend shares JWT secret with frontend via environment variable configuration
+
 **Development:**
-- SC-010: Local development setup completes in under 10 minutes
-- SC-011: All Context7 MCP documentation fetched before implementation begins
-- SC-012: Zero TypeScript errors in final implementation
+- SC-019: Local development setup completes in under 10 minutes
+- SC-020: All Context7 MCP documentation fetched before implementation begins
+- SC-021: Zero TypeScript/Python errors in final implementation
+- SC-022: All functional requirements have corresponding test coverage
 
 ### Edge Cases
-Document at least 10:
+Document at least 17:
 
 **Authentication:**
 - User tries to register with existing email
@@ -244,6 +286,15 @@ Document at least 10:
 - Database is temporarily unavailable
 - User deletes account (cascade delete history)
 - Very long chat history causes slow load
+
+**Backend Authentication Middleware:**
+- Token is valid but user has been deleted from the database
+- Token signature is valid but payload is malformed
+- Clock skew between frontend and backend causes valid tokens to appear expired
+- Concurrent requests with same token during token refresh window
+- Token contains unexpected or additional claims
+- Backend receives token in wrong format (e.g., Basic auth instead of Bearer)
+- Token is truncated or corrupted during transmission
 
 ## Implementation Phases (for Plan Generation)
 
@@ -271,11 +322,21 @@ Document at least 10:
 3. Add conversation list UI
 4. Implement new chat/continue chat
 
-### Phase 5: Testing & Polish
+### Phase 5: Backend Authentication Middleware (P1 Critical)
+1. Install PyJWT dependency in backend
+2. Add BETTER_AUTH_SECRET to backend config
+3. Create JWT validation utilities (backend/app/core/security.py)
+4. Create authentication middleware (backend/app/middleware/auth.py)
+5. Create get_current_user FastAPI dependency
+6. Modify chat endpoint to require authentication
+7. Add authentication failure logging
+
+### Phase 6: Testing & Polish
 1. Integration tests for auth flow
 2. E2E tests for chat functionality
-3. Error handling polish
-4. Documentation
+3. Backend middleware unit tests
+4. Error handling polish
+5. Documentation
 
 ## Agent Usage for Implementation
 
@@ -289,6 +350,7 @@ When generating tasks, assign agents as follows:
 | ChatKit customization | UI-and-ChatKit-customization-agent | chatkit-backend-adapter |
 | UI theming | UI-and-ChatKit-customization-agent | ui-customization |
 | Selection Q&A | UI-and-ChatKit-customization-agent | selection-qa |
+| Backend auth middleware | backend-architect-and-sdk-agent | fastapi-scaffolding |
 
 ## Output Format
 
@@ -479,6 +541,8 @@ Before implementing any task, fetch documentation for:
 3. **Neon PostgreSQL**: `mcp__context7__resolve-library-id` with "neon postgres"
 4. **OpenAI ChatKit**: `mcp__context7__resolve-library-id` with "openai chatkit"
 5. **Next.js App Router**: `mcp__context7__resolve-library-id` with "nextjs"
+6. **FastAPI Security**: `mcp__context7__resolve-library-id` with "fastapi" (for middleware/dependencies)
+7. **PyJWT**: `mcp__context7__resolve-library-id` with "pyjwt" (for JWT validation on backend)
 
 This is MANDATORY per project constitution. No implementation without MCP-verified documentation.
 

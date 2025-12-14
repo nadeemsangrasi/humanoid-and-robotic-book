@@ -15,8 +15,9 @@ This specification defines the authentication system and frontend-backend integr
 2. **ChatKit Backend Adapter**: Customizing the ChatKit UI to communicate with the existing FastAPI RAG backend instead of OpenAI workflows
 3. **Chat History Persistence**: Storing and retrieving user conversations across sessions
 4. **Protected Routes**: Ensuring authenticated access to the chat interface
+5. **Backend Authentication Middleware**: Verifying JWT tokens on the FastAPI backend to secure API endpoints
 
-The goal is to transform the current ChatKit-based frontend from using OpenAI workflows to using the custom RAG-powered FastAPI backend while adding user authentication and conversation persistence.
+The goal is to transform the current ChatKit-based frontend from using OpenAI workflows to using the custom RAG-powered FastAPI backend while adding user authentication and conversation persistence, with end-to-end security through backend token verification.
 
 ---
 
@@ -166,6 +167,24 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 
 ---
 
+### User Story 10 - Backend Authentication Middleware (Priority: P1)
+
+The FastAPI backend needs to receive JWT tokens from authenticated frontend users, verify the token validity, extract user information, and process requests securely.
+
+**Why this priority**: This is critical for securing the RAG backend API. Without backend token verification, any client could access the chat API directly, bypassing frontend authentication and potentially abusing the system.
+
+**Independent Test**: Can be fully tested by sending requests to the backend with valid/invalid/missing tokens and verifying appropriate responses (200 for valid, 401 for invalid/missing).
+
+**Acceptance Scenarios**:
+
+1. **Given** an authenticated frontend user, **When** their request reaches the FastAPI backend with a valid JWT in the Authorization header, **Then** the middleware extracts the user ID, validates the token signature, and allows the request to proceed
+2. **Given** a request with an expired JWT token, **When** the backend middleware processes it, **Then** it returns a 401 Unauthorized response with a clear error message
+3. **Given** a request without an Authorization header, **When** the backend middleware processes it, **Then** it returns a 401 Unauthorized response indicating authentication is required
+4. **Given** a request with an invalid or malformed JWT token, **When** the backend middleware processes it, **Then** it returns a 401 Unauthorized response without revealing specific validation details (security)
+5. **Given** a valid authenticated request, **When** the middleware extracts the user ID, **Then** the user context is available to downstream route handlers for logging and personalization
+
+---
+
 ### Edge Cases
 
 **Authentication Edge Cases**:
@@ -192,6 +211,15 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 - User has extensive chat history causing slow load times
 - Two browser tabs with the same session sending messages simultaneously
 - User tries to continue a conversation that was deleted in another session
+
+**Backend Authentication Middleware Edge Cases**:
+- Token is valid but user has been deleted from the database
+- Token signature is valid but payload is malformed (missing required claims)
+- Clock skew between frontend and backend causes valid tokens to appear expired
+- Concurrent requests with same token during token refresh window
+- Token contains unexpected or additional claims that should be ignored
+- Backend receives token in wrong format (e.g., Basic auth instead of Bearer)
+- Token is truncated or corrupted during transmission
 
 ---
 
@@ -251,6 +279,17 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 - **FR-035**: System SHOULD support OAuth authentication via GitHub
 - **FR-036**: System SHOULD link OAuth accounts to existing email-based accounts when email addresses match
 
+### Functional Requirements - Backend Authentication Middleware (P1)
+
+- **FR-037**: FastAPI backend MUST implement authentication middleware that intercepts all protected routes
+- **FR-038**: Backend middleware MUST extract JWT token from the `Authorization: Bearer <token>` header
+- **FR-039**: Backend middleware MUST validate JWT token signature using the same secret used by Better Auth (`BETTER_AUTH_SECRET`)
+- **FR-040**: Backend middleware MUST verify token expiration and reject expired tokens with 401 response
+- **FR-041**: Backend middleware MUST extract user ID from validated token payload and make it available to route handlers
+- **FR-042**: Backend middleware MUST return 401 Unauthorized for missing, invalid, or expired tokens without revealing specific failure reasons
+- **FR-043**: Backend MUST share JWT secret configuration with frontend via environment variable (`BETTER_AUTH_SECRET`)
+- **FR-044**: Backend middleware MUST log authentication failures (without sensitive data) for security monitoring
+
 ### Key Entities
 
 - **User**: An authenticated individual with an account in the system. Contains profile information (email, display name), authentication credentials, and relationships to sessions and conversations.
@@ -293,12 +332,20 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 - **SC-012**: Chat history persists correctly across browser sessions with 100% data integrity
 - **SC-013**: Users can create, continue, and delete conversations with immediate UI feedback
 
+### Measurable Outcomes - Backend Authentication Middleware
+
+- **SC-014**: Backend middleware validates tokens in under 10ms average latency
+- **SC-015**: 100% of requests without valid tokens return 401 Unauthorized
+- **SC-016**: 100% of requests with valid tokens include user context in route handlers
+- **SC-017**: Authentication failures are logged with request metadata (no sensitive data)
+- **SC-018**: Backend shares JWT secret with frontend via environment variable configuration
+
 ### Measurable Outcomes - Development
 
-- **SC-014**: Local development environment setup completes in under 10 minutes with documented steps
-- **SC-015**: All Context7 MCP documentation for required technologies is fetched and referenced before implementation begins
-- **SC-016**: Zero TypeScript compilation errors in the final implementation
-- **SC-017**: All functional requirements have corresponding test coverage
+- **SC-019**: Local development environment setup completes in under 10 minutes with documented steps
+- **SC-020**: All Context7 MCP documentation for required technologies is fetched and referenced before implementation begins
+- **SC-021**: Zero TypeScript/Python compilation errors in the final implementation
+- **SC-022**: All functional requirements have corresponding test coverage
 
 ---
 
@@ -336,6 +383,8 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 - **Better Auth**: Authentication library for Next.js
 - **Drizzle ORM**: TypeScript ORM for database operations
 - **OpenAI ChatKit React**: Existing UI components in frontend/
+- **PyJWT**: Python library for JWT token validation on FastAPI backend
+- **python-jose**: Alternative JWT library with cryptographic support (optional)
 
 ### Internal Dependencies
 
@@ -423,25 +472,36 @@ A user wants to delete their chat history for privacy reasons, removing all stor
 3. Add conversation list UI component
 4. Implement new chat and continue chat functionality
 
-### Phase 5: Testing & Polish
+### Phase 5: Backend Authentication Middleware (P1 - Critical)
+
+1. Create JWT validation utility module in FastAPI backend
+2. Implement authentication middleware/dependency for FastAPI routes
+3. Configure shared JWT secret (`BETTER_AUTH_SECRET`) environment variable
+4. Add user context extraction and injection into request state
+5. Implement proper error responses (401 Unauthorized)
+6. Add authentication logging for security monitoring
+
+### Phase 6: Testing & Polish
 
 1. Integration tests for authentication flow
 2. E2E tests for chat functionality
-3. Error handling refinement
-4. Documentation and developer setup guide
+3. Backend middleware unit tests
+4. Error handling refinement
+5. Documentation and developer setup guide
 
 ---
 
 ## Agent and Skill Assignments for Implementation
 
-| Task Area                 | Agent                              | Skill                        |
-| ------------------------- | ---------------------------------- | ---------------------------- |
-| Drizzle schema definition | backend-architect-and-sdk-agent    | drizzle-schema-generation    |
-| Better Auth configuration | Auth-Integration-Agent             | better-auth-configuration    |
-| Frontend auth components  | Auth-Integration-Agent             | frontend-auth-integration    |
-| ChatKit customization     | UI-and-ChatKit-customization-agent | chatkit-backend-adapter      |
-| UI theming and styling    | UI-and-ChatKit-customization-agent | ui-customization             |
-| Selection-based Q&A       | UI-and-ChatKit-customization-agent | selection-qa                 |
+| Task Area                     | Agent                              | Skill                        |
+| ----------------------------- | ---------------------------------- | ---------------------------- |
+| Drizzle schema definition     | backend-architect-and-sdk-agent    | drizzle-schema-generation    |
+| Better Auth configuration     | Auth-Integration-Agent             | better-auth-configuration    |
+| Frontend auth components      | Auth-Integration-Agent             | frontend-auth-integration    |
+| ChatKit customization         | UI-and-ChatKit-customization-agent | chatkit-backend-adapter      |
+| UI theming and styling        | UI-and-ChatKit-customization-agent | ui-customization             |
+| Selection-based Q&A           | UI-and-ChatKit-customization-agent | selection-qa                 |
+| Backend auth middleware       | backend-architect-and-sdk-agent    | fastapi-scaffolding          |
 
 ---
 
@@ -453,5 +513,7 @@ Before implementing any task, fetch documentation for:
 2. **Drizzle ORM**: `resolve-library-id` with "drizzle-orm"
 3. **Neon PostgreSQL**: `resolve-library-id` with "neon postgres"
 4. **Next.js App Router**: `resolve-library-id` with "nextjs"
+5. **FastAPI Security**: `resolve-library-id` with "fastapi" (for middleware/dependencies)
+6. **PyJWT**: `resolve-library-id` with "pyjwt" (for JWT validation on backend)
 
 This is MANDATORY per project constitution. No implementation without MCP-verified documentation.

@@ -9,7 +9,7 @@ feature: 002-auth-frontend-integration
 branch: 002-auth-frontend-integration
 user: nadeemsangrasi
 command: /sp.specify
-labels: ["authentication", "better-auth", "drizzle", "chatkit", "frontend-integration"]
+labels: ["authentication", "better-auth", "drizzle", "chatkit", "frontend-integration", "backend-middleware", "jwt", "fastapi"]
 links:
   spec: specs/002-auth-frontend-integration/spec.md
   ticket: null
@@ -35,6 +35,7 @@ Requirements covered:
 1. Authentication System (Better Auth + Neon + Drizzle) with database schema for users, sessions, accounts, and chat history
 2. ChatKit Customization to connect to FastAPI backend instead of OpenAI workflows
 3. Chat History & Protected Routes for conversation persistence and authentication guards
+4. Backend Authentication Middleware (US10) - FastAPI middleware to verify JWT tokens and secure API endpoints
 
 Technology Stack (MANDATORY):
 - Authentication: Better Auth
@@ -42,20 +43,21 @@ Technology Stack (MANDATORY):
 - ORM: Drizzle ORM
 - Frontend Framework: Next.js 15
 - UI Components: OpenAI ChatKit React
+- Backend JWT Validation: PyJWT (shared BETTER_AUTH_SECRET with frontend)
 
 ## Response snapshot
 
 Created comprehensive specification for Authentication & Frontend-Backend Integration feature:
 
 **Specification Summary:**
-- 9 User Stories (4 P1, 3 P2, 2 P3) covering registration, login, chat, session persistence, history, logout, protected routes, OAuth, and history deletion
-- 36 Functional Requirements (FR-001 to FR-036) across authentication, database, ChatKit customization, chat history, protected routes, and OAuth
-- 17 Success Criteria with measurable metrics
-- 18 Edge Cases documented
+- 10 User Stories (5 P1, 3 P2, 2 P3) covering registration, login, chat, session persistence, history, logout, protected routes, OAuth, history deletion, and backend auth middleware (US10)
+- 44 Functional Requirements (FR-001 to FR-044) across authentication, database, ChatKit customization, chat history, protected routes, OAuth, and backend authentication middleware
+- 22 Success Criteria with measurable metrics (including backend middleware metrics SC-014 to SC-018)
+- 25 Edge Cases documented (including 7 backend auth middleware edge cases)
 - 7 Key Entities defined (User, Session, Account, ChatSession, ChatMessage, Citation, APIAdapter)
 - 12 Constraints including technology mandates and agent assignments
-- 5 Implementation Phases planned
-- Agent and skill assignments mapped for implementation
+- 6 Implementation Phases planned (including Phase 5 for Backend Authentication Middleware)
+- Agent and skill assignments mapped for implementation (including backend-architect-and-sdk-agent for US10)
 
 **Files Created:**
 1. `specs/002-auth-frontend-integration/spec.md` - Main specification document

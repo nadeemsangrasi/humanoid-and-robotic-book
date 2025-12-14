@@ -9,7 +9,7 @@ feature: 002-auth-frontend-integration
 branch: 002-auth-frontend-integration
 user: nadeem
 command: /sp.tasks
-labels: ["authentication", "frontend", "tasks", "better-auth", "drizzle", "chatkit"]
+labels: ["authentication", "frontend", "tasks", "better-auth", "drizzle", "chatkit", "backend-middleware", "jwt", "fastapi", "pyjwt", "us10"]
 links:
   spec: specs/002-auth-frontend-integration/spec.md
   ticket: null
@@ -67,7 +67,7 @@ Each task MUST include:
 
 ## Response snapshot
 
-Generated comprehensive tasks.md with 49 tasks organized into 9 phases:
+Generated comprehensive tasks.md with 67 tasks organized into 11 phases:
 
 **Phase Distribution:**
 - Phase 1 (Setup): 3 tasks
@@ -78,26 +78,29 @@ Generated comprehensive tasks.md with 49 tasks organized into 9 phases:
 - Phase 6 (US6-US7): 4 tasks - Logout & Route Protection (P2)
 - Phase 7 (US8): 3 tasks - OAuth (P3 Optional)
 - Phase 8 (US9): 2 tasks - Delete History (P3)
-- Phase 9 (Polish): 5 tasks
+- **Phase 9 (US10): 8 tasks - Backend Auth Middleware (P1 Critical)**
+- Phase 10 (Testing): 10 tasks - Including backend middleware tests
+- Phase 11 (Polish): 6 tasks
 
 **Key Features:**
 - All tasks follow strict checklist format: `- [ ] [ID] [P?] [Story?] Description with file path`
 - Dependency graph with parallel execution opportunities
-- Agent workload summary (Auth-Integration: 25, UI-ChatKit: 16, backend-architect: 5)
-- File creation summary (29 new files, 3 modified files)
-- MVP milestones clearly marked (Phases 1-4)
+- Agent workload summary (Auth-Integration: 25, UI-ChatKit: 16, backend-architect: 23)
+- File creation summary (27 frontend files, 5 backend files, 8 test files, 6 modified files)
+- MVP milestones clearly marked (Phases 1-4 + Phase 9 for backend security)
+- Backend auth middleware (US10) tasks T058-T065 for PyJWT integration
 
 ## Outcome
 
-- ✅ Impact: Generated actionable task list enabling immediate implementation
+- ✅ Impact: Generated actionable task list enabling immediate implementation (including backend auth middleware US10)
 - 🧪 Tests: N/A (task generation, not code)
 - 📁 Files: 1 created (specs/002-auth-frontend-integration/tasks.md)
-- 🔁 Next prompts: /sp.implement to begin execution
-- 🧠 Reflection: Task organization by user story enables independent testing and incremental delivery
+- 🔁 Next prompts: /sp.implement to begin execution (prioritize Phase 9 for backend security)
+- 🧠 Reflection: Task organization by user story enables independent testing and incremental delivery. US10 (Backend Auth Middleware) is P1 critical and should be completed alongside frontend phases for production security.
 
 ## Evaluation notes (flywheel)
 
 - Failure modes observed: None - all design documents were available and complete
-- Graders run and results (PASS/FAIL): PASS - all 49 tasks follow required format
+- Graders run and results (PASS/FAIL): PASS - all 67 tasks follow required format
 - Prompt variant (if applicable): Extended prompt with explicit task IDs and file paths
 - Next experiment (smallest change to try): Add estimated complexity/time per task

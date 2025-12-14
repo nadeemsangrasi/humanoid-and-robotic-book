@@ -18,6 +18,7 @@ The specification covers:
 - ChatKit Backend Adapter: Customizing ChatKit UI to connect to FastAPI RAG backend
 - Chat History Persistence: Storing and retrieving user conversations
 - Protected Routes: Authenticated access to chat interface
+- Backend Authentication Middleware (US10): FastAPI middleware to verify JWT tokens and secure API endpoints
 
 ## Clarified Decisions (from /sp.clarify)
 
@@ -28,11 +29,12 @@ These decisions were made during clarification and MUST be followed:
 3. **Backend URL Config**: Environment variable `NEXT_PUBLIC_BACKEND_URL`
 4. **Token Storage**: httpOnly cookie (XSS-immune, with cookie-to-header extraction)
 5. **Password Hashing**: bcrypt algorithm (Better Auth default)
+6. **Backend JWT Secret**: Shared `BETTER_AUTH_SECRET` between frontend and backend
 
 ## Technical Context (Context7 MCP Verified)
 
 **Framework/Version**: Next.js 15 (App Router)
-**Language**: TypeScript
+**Language**: TypeScript (frontend), Python (backend)
 **Primary Dependencies**:
 - better-auth (authentication library)
 - better-auth/adapters/drizzle (Drizzle adapter)
@@ -40,14 +42,16 @@ These decisions were made during clarification and MUST be followed:
 - drizzle-orm/neon-http (Neon HTTP driver)
 - @neondatabase/serverless (Neon serverless driver)
 - @openai/chatkit-react (existing chat UI)
+- PyJWT (backend JWT validation)
+- python-jose[cryptography] (optional: backend JWT with crypto support)
 
 **Database**: PostgreSQL on Neon (free tier)
 **Authentication**: Better Auth with email/password + JWT
 **Existing Backend**: FastAPI on Hugging Face Spaces
-  - POST /api/v1/chat - RAG Q&A endpoint
+  - POST /api/v1/chat - RAG Q&A endpoint (to be secured with auth middleware)
   - GET /health - Health check
-**Testing**: Jest + React Testing Library
-**Project Type**: Frontend (Next.js) in `frontend/` folder
+**Testing**: Jest + React Testing Library (frontend), pytest (backend)
+**Project Type**: Frontend (Next.js) in `frontend/` folder, Backend (FastAPI) in `backend/` folder
 
 ## Constitution Check
 
@@ -157,6 +161,23 @@ frontend/                            # NEW FILES TO CREATE
 ├── drizzle/                         # NEW: Migration files (generated)
 ├── middleware.ts                    # NEW: Auth middleware
 └── drizzle.config.ts                # NEW: Drizzle Kit config
+
+backend/                             # NEW FILES TO CREATE (US10)
+├── app/
+│   ├── core/
+│   │   ├── config.py                # MODIFY: Add BETTER_AUTH_SECRET
+│   │   └── security.py              # NEW: JWT validation utilities
+│   ├── middleware/
+│   │   └── auth.py                  # NEW: Authentication middleware
+│   ├── dependencies/
+│   │   └── auth.py                  # NEW: get_current_user dependency
+│   └── api/v1/
+│       └── chat.py                  # MODIFY: Add auth dependency
+├── tests/
+│   ├── test_security.py             # NEW: JWT validation tests
+│   └── test_auth_middleware.py      # NEW: Auth middleware tests
+├── requirements.txt                 # MODIFY: Add PyJWT
+└── .env.example                     # MODIFY: Add BETTER_AUTH_SECRET
 ```
 
 ## Files to Modify
@@ -263,19 +284,38 @@ frontend/                            # NEW FILES TO CREATE
 **Agent**: UI-and-ChatKit-customization-agent + Auth-Integration-Agent
 **Skill**: ui-customization, drizzle-schema-generation
 
-### Phase 7: Testing & Polish
+### Phase 7: Backend Authentication Middleware (US10 - P1 Critical)
 
-1. Unit tests for auth components
-2. Integration tests for API routes
-3. E2E tests for auth flow
-4. Error handling refinement
-5. Update `.env.example`
-6. Documentation
+1. Install PyJWT dependency: `pip install PyJWT`
+2. Add `BETTER_AUTH_SECRET` to backend config (`backend/app/core/config.py`)
+3. Update backend `.env.example` with `BETTER_AUTH_SECRET`
+4. Create JWT validation utilities (`backend/app/core/security.py`)
+5. Create authentication middleware (`backend/app/middleware/auth.py`)
+6. Create `get_current_user` FastAPI dependency (`backend/app/dependencies/auth.py`)
+7. Modify chat endpoint to require authentication (`backend/app/api/v1/chat.py`)
+8. Add authentication failure logging
+
+**Agent**: backend-architect-and-sdk-agent
+**Skill**: fastapi-scaffolding
+
+**IMPORTANT**: This phase is P1 priority and should be completed alongside or immediately after Phase 5 (ChatKit Backend Adapter) to ensure the backend is secured before production deployment.
+
+### Phase 8: Testing & Polish
+
+1. Unit tests for auth components (frontend)
+2. Integration tests for API routes (frontend)
+3. Unit tests for JWT validation (backend)
+4. Integration tests for auth middleware (backend)
+5. E2E tests for auth flow
+6. Error handling refinement
+7. Update `.env.example` (frontend and backend)
+8. Documentation
 
 **Agent**: backend-architect-and-sdk-agent
 
 ## Environment Variables
 
+**Frontend (.env.local)**
 ```env
 # Database (Neon PostgreSQL)
 DATABASE_URL=postgresql://user:pass@ep-xxx.region.aws.neon.tech/dbname?sslmode=require
@@ -294,6 +334,16 @@ GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
 ```
 
+**Backend (.env)**
+```env
+# JWT Secret (MUST match frontend BETTER_AUTH_SECRET)
+BETTER_AUTH_SECRET=your-secret-key-min-32-chars
+
+# Existing backend config
+GOOGLE_API_KEY=...
+QDRANT_URL=...
+```
+
 ## Agent Assignment Summary
 
 | Component | Agent | Skill |
@@ -305,9 +355,12 @@ GITHUB_CLIENT_SECRET=
 | Citation display | UI-and-ChatKit-customization-agent | ui-customization |
 | Conversation list UI | UI-and-ChatKit-customization-agent | ui-customization |
 | Next.js middleware | Auth-Integration-Agent | frontend-auth-integration |
+| Backend auth middleware | backend-architect-and-sdk-agent | fastapi-scaffolding |
+| Backend JWT validation | backend-architect-and-sdk-agent | fastapi-scaffolding |
 
 ## Key Installation Commands
 
+**Frontend:**
 ```bash
 # Core dependencies
 npm install better-auth @better-fetch/fetch
@@ -317,6 +370,15 @@ npm install -D drizzle-kit
 # Generate and apply migrations
 npx drizzle-kit generate
 npx drizzle-kit migrate
+```
+
+**Backend:**
+```bash
+# JWT validation dependency
+pip install PyJWT
+
+# Or with cryptographic support (optional)
+pip install python-jose[cryptography]
 ```
 
 ## Output Format
@@ -368,6 +430,8 @@ specs/002-auth-frontend-integration/
 | Drizzle ORM | `/drizzle-team/drizzle-orm-docs` | postgres schema, neon connection, migrations |
 | Next.js App Router | `/websites/nextjs_app` | directory structure, file conventions |
 | Neon Serverless | `/neondatabase/serverless` | connection setup, drizzle integration |
+| FastAPI Security | `/fastapi/fastapi` | dependencies, middleware, security utilities |
+| PyJWT | `/jpadilla/pyjwt` | JWT encoding, decoding, validation |
 
 ---
 

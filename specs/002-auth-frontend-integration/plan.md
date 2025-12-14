@@ -13,8 +13,9 @@ Implement user authentication and frontend-backend integration for the Physical 
 2. **ChatKit Backend Adapter**: Transform ChatKit UI to communicate with FastAPI RAG backend instead of OpenAI
 3. **Chat History Persistence**: Store and retrieve user conversations across sessions
 4. **Protected Routes**: Next.js middleware for authenticated access to chat interface
+5. **Backend Authentication Middleware**: FastAPI middleware to verify JWT tokens and secure API endpoints
 
-**Technical Approach**: Use Better Auth's native Drizzle adapter with JWT sessions stored in httpOnly cookies. Create an API adapter layer to transform requests/responses between ChatKit format and FastAPI backend. Store chat history in Neon PostgreSQL with cascade deletion on user removal.
+**Technical Approach**: Use Better Auth's native Drizzle adapter with JWT sessions stored in httpOnly cookies. Create an API adapter layer to transform requests/responses between ChatKit format and FastAPI backend. Store chat history in Neon PostgreSQL with cascade deletion on user removal. Implement JWT token verification on FastAPI backend using PyJWT with shared secret configuration.
 
 ---
 
@@ -28,6 +29,8 @@ Implement user authentication and frontend-backend integration for the Physical 
 - `drizzle-orm` (ORM)
 - `@neondatabase/serverless` (database driver)
 - `@openai/chatkit-react` (existing chat UI)
+- `PyJWT` (backend JWT validation)
+- `python-jose[cryptography]` (optional: backend JWT with crypto support)
 
 **Storage**: PostgreSQL on Neon (free tier)
 **Testing**: Jest + React Testing Library
@@ -149,6 +152,25 @@ frontend/
 ```
 
 **Structure Decision**: Using Next.js App Router with route groups (`(auth)` for public routes, `(protected)` for authenticated routes). This follows Next.js 15 conventions and enables shared layouts per route group.
+
+### Backend Code (backend/)
+
+```text
+backend/
+├── app/
+│   ├── api/
+│   │   └── v1/
+│   │       ├── chat.py                    # MODIFY: Add auth dependency
+│   │       └── health.py                  # EXISTING (no auth needed)
+│   ├── core/
+│   │   ├── config.py                      # MODIFY: Add BETTER_AUTH_SECRET
+│   │   └── security.py                    # NEW: JWT validation utilities
+│   ├── middleware/
+│   │   └── auth.py                        # NEW: Authentication middleware
+│   └── main.py                            # MODIFY: Register middleware
+├── requirements.txt                       # MODIFY: Add PyJWT
+└── .env.example                           # MODIFY: Add BETTER_AUTH_SECRET
+```
 
 ---
 
@@ -279,6 +301,33 @@ frontend/
 
 ---
 
+### Phase 5.5: Backend Authentication Middleware (US10 - P1)
+
+**Agent**: backend-architect-and-sdk-agent
+**Skill**: fastapi-scaffolding
+
+**Purpose**: Secure the FastAPI backend by validating JWT tokens from authenticated frontend users
+
+**Tasks**:
+1. Install PyJWT dependency in backend (`pip install PyJWT`)
+2. Add `BETTER_AUTH_SECRET` to backend config and `.env.example`
+3. Create `backend/app/core/security.py` with JWT validation utilities
+4. Create `backend/app/middleware/auth.py` with authentication middleware
+5. Create `get_current_user` dependency for FastAPI routes
+6. Modify `backend/app/api/v1/chat.py` to require authentication
+7. Add authentication failure logging
+8. Update backend `.env.example` with new environment variables
+
+**Acceptance Criteria**:
+- [ ] Valid JWT tokens are accepted and user ID extracted
+- [ ] Invalid/expired tokens return 401 Unauthorized
+- [ ] Missing Authorization header returns 401 Unauthorized
+- [ ] User context available in route handlers via dependency injection
+- [ ] Authentication failures logged (without sensitive data)
+- [ ] Shared secret configured via `BETTER_AUTH_SECRET` environment variable
+
+---
+
 ### Phase 6: Testing & Polish
 
 **Agent**: backend-architect-and-sdk-agent
@@ -311,13 +360,14 @@ frontend/
 | 4 | Citation Display | UI-and-ChatKit-customization-agent | ui-customization |
 | 5 | Chat History | Auth-Integration-Agent | drizzle-schema-generation |
 | 5 | History UI | UI-and-ChatKit-customization-agent | ui-customization |
+| 5.5 | Backend Auth Middleware | backend-architect-and-sdk-agent | fastapi-scaffolding |
 | 6 | Testing | backend-architect-and-sdk-agent | - |
 
 ---
 
 ## Dependencies
 
-### NPM Packages to Add
+### NPM Packages to Add (Frontend)
 
 ```bash
 # Authentication
@@ -330,14 +380,25 @@ npm install drizzle-orm @neondatabase/serverless
 npm install -D drizzle-kit
 ```
 
+### Python Packages to Add (Backend)
+
+```bash
+# JWT Token Validation
+pip install PyJWT
+
+# Or with cryptographic support (optional)
+pip install python-jose[cryptography]
+```
+
 ### Environment Variables
 
+**Frontend (.env.local)**
 ```env
 # Database (Neon PostgreSQL)
 DATABASE_URL=postgresql://...
 
 # Better Auth
-BETTER_AUTH_SECRET=...
+BETTER_AUTH_SECRET=your-secure-secret-key-min-32-chars
 BETTER_AUTH_URL=http://localhost:3000
 
 # Backend API
@@ -348,6 +409,16 @@ GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
 GITHUB_CLIENT_ID=
 GITHUB_CLIENT_SECRET=
+```
+
+**Backend (.env)**
+```env
+# JWT Secret (MUST match frontend BETTER_AUTH_SECRET)
+BETTER_AUTH_SECRET=your-secure-secret-key-min-32-chars
+
+# Existing backend config
+GOOGLE_API_KEY=...
+QDRANT_URL=...
 ```
 
 ---
@@ -361,6 +432,8 @@ GITHUB_CLIENT_SECRET=
 | ChatKit API changes | Low | Medium | Adapter layer isolates changes |
 | Backend unavailability | Medium | High | Implement retry logic, graceful errors |
 | Session expiry during chat | Medium | Medium | Refresh session on activity |
+| JWT secret mismatch frontend/backend | Medium | High | Document shared secret requirement, validate on startup |
+| Clock skew causing token validation failures | Low | Medium | Add reasonable time tolerance (e.g., 60 seconds leeway) |
 
 ---
 
