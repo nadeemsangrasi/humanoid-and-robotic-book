@@ -1,10 +1,11 @@
 import Script from "next/script";
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/components/auth/AuthProvider";
 
 export const metadata: Metadata = {
-  title: "AgentKit demo",
-  description: "Demo of ChatKit with hosted workflow",
+  title: "Physical AI & Humanoid Robotics",
+  description: "Interactive textbook chatbot for Physical AI and Humanoid Robotics",
 };
 
 export default function RootLayout({
@@ -20,7 +21,11 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
     </html>
   );
 }

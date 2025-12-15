@@ -22,6 +22,7 @@ class Settings(BaseSettings):
         - GOOGLE_API_KEY: Google AI API key for Gemini models
         - QDRANT_URL: Qdrant Cloud cluster URL
         - QDRANT_API_KEY: Qdrant Cloud API key
+        - BETTER_AUTH_SECRET: Secret key for JWT validation (must match frontend)
 
     Optional environment variables (with defaults):
         - LOG_LEVEL: Logging level (default: INFO)
@@ -57,6 +58,11 @@ class Settings(BaseSettings):
     qdrant_api_key: str = Field(
         ...,
         description="Qdrant Cloud API key for authentication",
+    )
+
+    database_url: str = Field(
+        ...,
+        description="PostgreSQL database URL (Neon) for user verification",
     )
 
     # -------------------------------------------------------------------------
@@ -125,20 +131,21 @@ class Settings(BaseSettings):
     @field_validator("google_api_key", "qdrant_api_key")
     @classmethod
     def validate_not_placeholder(cls, v: str, info) -> str:
-        """Ensure API keys are not placeholder values."""
+        """Ensure API keys and secrets are not placeholder values."""
         placeholder_patterns = [
             "your_",
             "xxx",
             "placeholder",
             "api_key_here",
             "insert_",
+            "secret_here",
         ]
         v_lower = v.lower()
         for pattern in placeholder_patterns:
             if pattern in v_lower:
                 raise ValueError(
                     f"{info.field_name} appears to be a placeholder value. "
-                    "Please set a valid API key in your .env file."
+                    "Please set a valid value in your .env file."
                 )
         return v
 
@@ -247,7 +254,7 @@ def validate_settings() -> Settings:
         error_msg = str(e)
 
         # Check for specific missing required variables
-        required_vars = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY"]
+        required_vars = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "DATABASE_URL"]
         missing_vars = []
 
         for var in required_vars:
@@ -328,16 +335,17 @@ def print_settings_summary(settings: Settings) -> None:
     print("=" * 60)
     print("Application Configuration Summary")
     print("=" * 60)
-    print(f"  GOOGLE_API_KEY:   {mask_secret(settings.google_api_key)}")
-    print(f"  QDRANT_URL:       {settings.qdrant_url}")
-    print(f"  QDRANT_API_KEY:   {mask_secret(settings.qdrant_api_key)}")
-    print(f"  LOG_LEVEL:        {settings.log_level}")
-    print(f"  COLLECTION_NAME:  {settings.collection_name}")
-    print(f"  EMBEDDING_MODEL:  {settings.embedding_model}")
-    print(f"  LLM_MODEL:        {settings.llm_model}")
-    print(f"  SCORE_THRESHOLD:  {settings.score_threshold}")
-    print(f"  HOST:             {settings.host}")
-    print(f"  PORT:             {settings.port}")
+    print(f"  GOOGLE_API_KEY:     {mask_secret(settings.google_api_key)}")
+    print(f"  QDRANT_URL:         {settings.qdrant_url}")
+    print(f"  QDRANT_API_KEY:     {mask_secret(settings.qdrant_api_key)}")
+    print(f"  DATABASE_URL:       {mask_secret(settings.database_url)}")
+    print(f"  LOG_LEVEL:          {settings.log_level}")
+    print(f"  COLLECTION_NAME:    {settings.collection_name}")
+    print(f"  EMBEDDING_MODEL:    {settings.embedding_model}")
+    print(f"  LLM_MODEL:          {settings.llm_model}")
+    print(f"  SCORE_THRESHOLD:    {settings.score_threshold}")
+    print(f"  HOST:               {settings.host}")
+    print(f"  PORT:               {settings.port}")
     print("=" * 60)
 
 

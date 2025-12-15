@@ -3,12 +3,16 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --hover-bg: #f3f4f6;
+  --hover-border: #d1d5db;
   color-scheme: light;
 }
 
 :root[data-color-scheme="dark"] {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --hover-bg: #374151;
+  --hover-border: #6b7280;
   color-scheme: dark;
 }
 
@@ -16,6 +20,8 @@
   :root:not([data-color-scheme]) {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --hover-bg: #374151;
+    --hover-border: #6b7280;
     color-scheme: dark;
   }
 }
@@ -31,4 +37,16 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Improve dark mode hover states */
+.dark button:not([disabled]):hover,
+.dark a:not([disabled]):hover {
+  transition: all 0.15s ease-in-out;
+}
+
+/* Ensure interactive elements have visible hover states in dark mode */
+.dark .hover-highlight:hover {
+  background-color: var(--hover-bg);
+  border-color: var(--hover-border);
 }

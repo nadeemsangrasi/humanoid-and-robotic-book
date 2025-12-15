@@ -1,5 +1,12 @@
 import { ColorScheme, StartScreenPrompt, ThemeOption } from "@openai/chatkit";
 
+/**
+ * Backend URL for the FastAPI RAG chatbot service
+ * Deployed on Hugging Face Spaces
+ */
+export const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+
 export const WORKFLOW_ID =
   process.env.NEXT_PUBLIC_CHATKIT_WORKFLOW_ID?.trim() ?? "";
 
@@ -7,15 +14,30 @@ export const CREATE_SESSION_ENDPOINT = "/api/create-session";
 
 export const STARTER_PROMPTS: StartScreenPrompt[] = [
   {
-    label: "What can you do?",
-    prompt: "What can you do?",
-    icon: "circle-question",
+    label: "What is Physical AI?",
+    prompt: "Explain Physical AI and its applications in robotics.",
+    icon: "brain",
+  },
+  {
+    label: "Humanoid robotics basics",
+    prompt: "What are the key components of humanoid robotics?",
+    icon: "robot",
+  },
+  {
+    label: "Robot kinematics",
+    prompt: "Explain forward and inverse kinematics in robotics.",
+    icon: "cog",
+  },
+  {
+    label: "ROS2 fundamentals",
+    prompt: "What are the fundamentals of ROS2 for robotics?",
+    icon: "book-open",
   },
 ];
 
-export const PLACEHOLDER_INPUT = "Ask anything...";
+export const PLACEHOLDER_INPUT = "Ask about Physical AI & Robotics...";
 
-export const GREETING = "How can I help you today?";
+export const GREETING = "Physical AI & Humanoid Robotics Assistant";
 
 export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
   color: {

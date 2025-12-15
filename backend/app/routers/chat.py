@@ -30,8 +30,11 @@ Response:
 import time
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
+
+from app.db import User
+from app.dependencies.auth import get_optional_user
 
 from app.config import get_settings
 from app.schemas.chat import (
@@ -189,14 +192,18 @@ def build_citations_from_results(
         "Send a question and receive an answer with source citations from the "
         "Physical AI & Humanoid Robotics textbook. The endpoint uses RAG "
         "(Retrieval-Augmented Generation) to find relevant passages and generate "
-        "accurate answers with proper citations."
+        "accurate answers with proper citations. "
+        "Authentication is optional - if provided, user context is logged."
     ),
 )
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(
+    request: ChatRequest,
+    current_user: User | None = Depends(get_optional_user),
+) -> ChatResponse:
     """Process a user question and return an answer with citations.
 
     This endpoint implements the RAG pipeline:
-    1. Validates the incoming request
+    1. Validates the incoming request and authenticates the user
     2. Embeds the query using Google's text-embedding-004
     3. Searches Qdrant for relevant textbook chunks
     4. Invokes the Gemini-powered agent to generate an answer
@@ -204,18 +211,19 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     Args:
         request: ChatRequest containing the user's query and optional k value.
+        current_user: The authenticated user (injected by dependency).
 
     Returns:
         ChatResponse with the answer, citations, and metadata.
 
     Raises:
-        HTTPException: 400 for validation errors, 429 for rate limits,
-            503 for service unavailability.
+        HTTPException: 401 for authentication errors, 400 for validation errors,
+            429 for rate limits, 503 for service unavailability.
 
     Example:
-        >>> # POST /api/v1/chat
+        >>> # POST /api/v1/chat with Authorization: Bearer <token>
         >>> request = ChatRequest(query="What is inverse kinematics?", k=5)
-        >>> response = await chat(request)
+        >>> response = await chat(request, current_user)
         >>> print(response.answer)
         Inverse kinematics (IK) is the mathematical technique...
     """
@@ -225,6 +233,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
     logger.info(
         "Processing chat request",
         extra={
+            "user_id": current_user.id if current_user else "anonymous",
             "query_length": len(request.query),
             "k": request.k,
         },
@@ -297,6 +306,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
         logger.info(
             "Chat request completed successfully",
             extra={
+                "user_id": current_user.id if current_user else "anonymous",
                 "processing_time_ms": processing_time_ms,
                 "citations_count": len(citations),
                 "answer_length": len(agent_result["answer"]),
