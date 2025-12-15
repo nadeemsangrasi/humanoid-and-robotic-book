@@ -81,8 +81,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Prepare the request to the backend
+    // Note: Backend expects 'query' field, not 'message'
     const backendRequestBody = {
-      message: trimmedMessage,
+      query: trimmedMessage,
       ...(body.session_id && { session_id: body.session_id }),
     };
 
@@ -91,19 +92,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       "Content-Type": "application/json",
     };
 
-    // Add user context to the request via custom header
-    // The backend can use this for user-specific features
+    // Add user context to the request via custom headers
+    // The frontend has already validated the user session via Better Auth
+    // These headers allow the backend to identify the user without JWT
     backendHeaders["X-User-ID"] = session.user.id;
     if (session.user.email) {
       backendHeaders["X-User-Email"] = session.user.email;
     }
-
-    // If the session has a token, include it for backend authentication
-    // Note: Better Auth uses session cookies, but we can generate a token
-    // for backend services if needed
-    if (session.session?.token) {
-      backendHeaders["Authorization"] = `Bearer ${session.session.token}`;
+    if (session.user.name) {
+      backendHeaders["X-User-Name"] = session.user.name;
     }
+
+    // Note: We don't send Authorization header because Better Auth's session token
+    // is not a JWT - it's a random session identifier. The frontend proxy validates
+    // the session, and the backend trusts requests from the frontend with X-User-* headers.
 
     // Forward the request to the FastAPI backend
     const backendResponse = await fetch(`${BACKEND_URL}/api/v1/chat`, {
@@ -157,8 +159,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       return NextResponse.json(
         {
           error: "Service Unavailable",
-          detail:
-            "Unable to reach the chat backend. Please try again later.",
+          detail: "Unable to reach the chat backend. Please try again later.",
         },
         { status: 503 }
       );

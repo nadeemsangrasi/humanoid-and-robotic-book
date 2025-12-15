@@ -60,9 +60,9 @@ class Settings(BaseSettings):
         description="Qdrant Cloud API key for authentication",
     )
 
-    better_auth_secret: str = Field(
+    database_url: str = Field(
         ...,
-        description="Secret key for Better Auth JWT validation (must match frontend BETTER_AUTH_SECRET)",
+        description="PostgreSQL database URL (Neon) for user verification",
     )
 
     # -------------------------------------------------------------------------
@@ -128,7 +128,7 @@ class Settings(BaseSettings):
     # Validators
     # -------------------------------------------------------------------------
 
-    @field_validator("google_api_key", "qdrant_api_key", "better_auth_secret")
+    @field_validator("google_api_key", "qdrant_api_key")
     @classmethod
     def validate_not_placeholder(cls, v: str, info) -> str:
         """Ensure API keys and secrets are not placeholder values."""
@@ -254,7 +254,7 @@ def validate_settings() -> Settings:
         error_msg = str(e)
 
         # Check for specific missing required variables
-        required_vars = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "BETTER_AUTH_SECRET"]
+        required_vars = ["GOOGLE_API_KEY", "QDRANT_URL", "QDRANT_API_KEY", "DATABASE_URL"]
         missing_vars = []
 
         for var in required_vars:
@@ -338,7 +338,7 @@ def print_settings_summary(settings: Settings) -> None:
     print(f"  GOOGLE_API_KEY:     {mask_secret(settings.google_api_key)}")
     print(f"  QDRANT_URL:         {settings.qdrant_url}")
     print(f"  QDRANT_API_KEY:     {mask_secret(settings.qdrant_api_key)}")
-    print(f"  BETTER_AUTH_SECRET: {mask_secret(settings.better_auth_secret)}")
+    print(f"  DATABASE_URL:       {mask_secret(settings.database_url)}")
     print(f"  LOG_LEVEL:          {settings.log_level}")
     print(f"  COLLECTION_NAME:    {settings.collection_name}")
     print(f"  EMBEDDING_MODEL:    {settings.embedding_model}")

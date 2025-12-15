@@ -20,6 +20,7 @@ import { useState, type FormEvent, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signIn } from "@/lib/auth-client";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 /**
  * Google Icon SVG Component
@@ -117,6 +118,7 @@ function validateForm(data: FormData): FormErrors {
  */
 export function RegisterForm() {
   const router = useRouter();
+  const { refetch } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isOAuthLoading, setIsOAuthLoading] = useState<string | null>(null);
   const [formData, setFormData] = useState<FormData>({
@@ -185,9 +187,14 @@ export function RegisterForm() {
         onRequest: () => {
           setIsLoading(true);
         },
-        onSuccess: () => {
+        onSuccess: async () => {
           setIsLoading(false);
-          router.push("/chat");
+          // Refresh session state before navigating to ensure auth context is updated
+          await refetch();
+          // Small delay to ensure session is properly set
+          setTimeout(() => {
+            router.push("/chat");
+          }, 100);
         },
         onError: (ctx) => {
           setIsLoading(false);

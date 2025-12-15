@@ -144,18 +144,22 @@ export const auth = betterAuth({
   /**
    * Rate limiting configuration for security
    * Prevents brute force attacks on authentication endpoints
+   *
+   * Note: This applies to sensitive endpoints (sign-in, sign-up, password reset).
+   * Session endpoints (get-session) are typically excluded from strict rate limits.
    */
   rateLimit: {
     enabled: true,
     /**
      * Time window in seconds for rate limiting
      */
-    window: 60 * 15, // 15 minutes
+    window: 60, // 1 minute window
 
     /**
      * Maximum attempts allowed within the window
+     * Set to a reasonable limit that prevents brute force but allows normal usage
      */
-    max: 5, // 5 attempts per 15 minutes
+    max: 100, // 100 requests per minute (allows frequent session checks)
   },
 
   /**

@@ -30,13 +30,13 @@ interface SessionResponse {
  * Routes that require authentication
  * Users without a session will be redirected to login
  */
-const protectedRoutes = ["/chat", "/history", "/profile", "/settings"];
+const protectedRoutes = ["/", "/chat", "/history", "/profile", "/settings"];
 
 /**
  * Routes that are always public
  * These routes do not require authentication
  */
-const publicRoutes = ["/", "/login", "/register", "/api/auth"];
+const publicRoutes = ["/login", "/register", "/api/auth"];
 
 /**
  * Check if a path matches any of the given route prefixes
@@ -96,6 +96,10 @@ export async function middleware(request: NextRequest) {
     }
 
     // User is authenticated, allow access
+    const isRootRoute = matchesRoute(path, ["/"]);
+    if (isRootRoute) {
+      return NextResponse.redirect(new URL("/chat", request.url));
+    }
     return NextResponse.next();
   } catch (error) {
     // On error (e.g., network issues), redirect to login for safety

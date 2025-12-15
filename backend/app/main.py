@@ -17,6 +17,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings, validate_settings, ConfigurationError, print_settings_summary
+from app.db.database import close_db
 from app.middleware import AuthMiddleware
 from app.routers import chat_router, health_router
 from app.utils.logging import setup_logging, get_logger
@@ -85,6 +86,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # -------------------------------------------------------------------------
     logger.info("Shutting down RAG Textbook Chatbot API")
 
+    # Close database connection pool
+    await close_db()
+
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application.
@@ -135,7 +139,7 @@ def create_app() -> FastAPI:
     # -------------------------------------------------------------------------
     # Authentication Middleware
     # -------------------------------------------------------------------------
-    # Validates JWT tokens from Better Auth and populates request.state.user.
+    # Verifies user email against Neon PostgreSQL database and populates request.state.user.
     # Note: Middleware order matters - AuthMiddleware runs after CORS
     # so that preflight OPTIONS requests are handled correctly.
     app.add_middleware(AuthMiddleware)

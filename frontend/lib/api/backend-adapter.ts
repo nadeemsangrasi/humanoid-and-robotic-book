@@ -27,22 +27,26 @@ export interface Citation {
  * Request format expected by the FastAPI backend
  */
 export interface BackendChatRequest {
-  /** User's message/question */
-  message: string;
-  /** Optional session ID for conversation continuity */
-  session_id?: string;
+  /** User's question (backend expects 'query' field) */
+  query: string;
+  /** Optional number of results to retrieve (1-10, default 5) */
+  k?: number;
 }
 
 /**
  * Response format from the FastAPI backend
  */
 export interface BackendChatResponse {
-  /** Assistant's response text */
-  response: string;
+  /** Assistant's response text (backend returns 'answer' field) */
+  answer: string;
   /** Citations from the RAG retrieval */
   citations: Citation[];
-  /** Session ID for conversation continuity */
-  session_id: string;
+  /** Response metadata */
+  metadata?: {
+    chunks_retrieved?: number;
+    processing_time_ms?: number;
+    model?: string;
+  };
 }
 
 /**
@@ -74,16 +78,16 @@ export interface ChatResult {
  * Transform ChatKit-style request to FastAPI backend format
  *
  * @param message - User's message text
- * @param sessionId - Optional session ID for conversation continuity
+ * @param k - Optional number of results to retrieve (1-10, default 5)
  * @returns Formatted request body for backend API
  */
 export function transformToBackendRequest(
   message: string,
-  sessionId?: string
+  k?: number
 ): BackendChatRequest {
   return {
-    message: message.trim(),
-    ...(sessionId && { session_id: sessionId }),
+    query: message.trim(),
+    ...(k && { k }),
   };
 }
 
@@ -96,11 +100,23 @@ export function transformToBackendRequest(
 export function transformFromBackendResponse(
   response: BackendChatResponse
 ): ChatResult {
+  // Handle both 'answer' (backend format) and 'response' (legacy format)
+  const message = response.answer || (response as unknown as { response?: string }).response || "";
+
+  // Debug logging
+  if (typeof window !== "undefined") {
+    console.log("[BackendAdapter] transformFromBackendResponse:", {
+      rawResponse: response,
+      extractedMessage: message,
+      hasAnswer: Boolean(response.answer),
+    });
+  }
+
   return {
-    success: true,
-    message: response.response,
+    success: Boolean(message),
+    message,
     citations: response.citations || [],
-    sessionId: response.session_id,
+    sessionId: "", // Backend doesn't return session_id currently
   };
 }
 
@@ -154,11 +170,12 @@ export async function sendChatMessage(
     sessionId?: string;
     token?: string;
     signal?: AbortSignal;
+    k?: number;
   } = {}
 ): Promise<ChatResult> {
-  const { sessionId, token, signal } = options;
+  const { sessionId, token, signal, k } = options;
 
-  const requestBody = transformToBackendRequest(message, sessionId);
+  const requestBody = transformToBackendRequest(message, k);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -169,7 +186,7 @@ export async function sendChatMessage(
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/chat`, {
+    const response = await fetch(`https://nadeem907-rag-chatbot.hf.space/api/v1/chat`, {
       method: "POST",
       headers,
       body: JSON.stringify(requestBody),
@@ -265,9 +282,16 @@ export async function sendChatMessageViaProxy(
     const rawText = await response.text();
     let data: BackendChatResponse | BackendErrorResponse;
 
+    console.log("[BackendAdapter] sendChatMessageViaProxy raw response:", {
+      status: response.status,
+      ok: response.ok,
+      rawText: rawText.slice(0, 500),
+    });
+
     try {
       data = JSON.parse(rawText);
     } catch {
+      console.error("[BackendAdapter] Failed to parse JSON:", rawText);
       return {
         success: false,
         message: "",
@@ -277,8 +301,11 @@ export async function sendChatMessageViaProxy(
       };
     }
 
+    console.log("[BackendAdapter] Parsed data:", data);
+
     if (!response.ok) {
       const errorMessage = parseBackendError(data, response.statusText);
+      console.error("[BackendAdapter] Response not OK:", errorMessage);
       return {
         success: false,
         message: "",

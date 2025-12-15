@@ -40,7 +40,7 @@ export default function ChatPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [colorScheme, setColorScheme] = useColorScheme();
+  const { scheme: colorScheme, setScheme: setColorScheme } = useColorScheme();
   const [savedFacts, setSavedFacts] = useState<string[]>([]);
 
   // Get session ID from URL if present
@@ -53,6 +53,7 @@ export default function ChatPage() {
     messages: historyMessages,
     isLoading: historyLoading,
     clearSession,
+    addMessage,
   } = useChatHistory({
     initialSessionId,
     autoSave: true,
@@ -109,6 +110,20 @@ export default function ChatPage() {
     clearSession();
     router.replace("/chat", { scroll: false });
   }, [clearSession, router]);
+
+  /**
+   * Handle saving messages to chat history
+   */
+  const handleSaveMessage = useCallback(
+    async (
+      role: "user" | "assistant",
+      content: string,
+      citations?: { title: string; url: string; excerpt?: string; score?: number }[]
+    ) => {
+      await addMessage(role, content, citations);
+    },
+    [addMessage]
+  );
 
   // Set page title on client side
   useEffect(() => {
@@ -223,6 +238,7 @@ export default function ChatPage() {
           onThemeRequest={handleThemeRequest}
           sessionId={sessionId}
           initialMessages={historyMessages}
+          onSaveMessage={handleSaveMessage}
         />
       </div>
 

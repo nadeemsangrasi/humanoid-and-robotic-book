@@ -33,8 +33,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import ValidationError
 
-from app.core.security import User
-from app.dependencies.auth import get_current_user
+from app.db import User
+from app.dependencies.auth import get_optional_user
 
 from app.config import get_settings
 from app.schemas.chat import (
@@ -184,7 +184,6 @@ def build_citations_from_results(
     response_model=ChatResponse,
     responses={
         400: {"model": ErrorResponse, "description": "Validation error"},
-        401: {"model": ErrorResponse, "description": "Unauthorized - invalid or missing token"},
         429: {"model": ErrorResponse, "description": "Rate limited"},
         503: {"model": ErrorResponse, "description": "Service unavailable"},
     },
@@ -194,12 +193,12 @@ def build_citations_from_results(
         "Physical AI & Humanoid Robotics textbook. The endpoint uses RAG "
         "(Retrieval-Augmented Generation) to find relevant passages and generate "
         "accurate answers with proper citations. "
-        "**Requires authentication** - include Bearer token in Authorization header."
+        "Authentication is optional - if provided, user context is logged."
     ),
 )
 async def chat(
     request: ChatRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User | None = Depends(get_optional_user),
 ) -> ChatResponse:
     """Process a user question and return an answer with citations.
 
@@ -234,7 +233,7 @@ async def chat(
     logger.info(
         "Processing chat request",
         extra={
-            "user_id": current_user.id,
+            "user_id": current_user.id if current_user else "anonymous",
             "query_length": len(request.query),
             "k": request.k,
         },
@@ -307,7 +306,7 @@ async def chat(
         logger.info(
             "Chat request completed successfully",
             extra={
-                "user_id": current_user.id,
+                "user_id": current_user.id if current_user else "anonymous",
                 "processing_time_ms": processing_time_ms,
                 "citations_count": len(citations),
                 "answer_length": len(agent_result["answer"]),

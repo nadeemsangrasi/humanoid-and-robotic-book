@@ -61,6 +61,12 @@ type ChatKitPanelProps = {
   sessionId?: string | null;
   /** Initial messages to restore from history */
   initialMessages?: HistoryMessage[];
+  /** Callback to save messages to history */
+  onSaveMessage?: (
+    role: "user" | "assistant",
+    content: string,
+    citations?: Citation[]
+  ) => Promise<void>;
 };
 
 type ErrorState = {
@@ -109,6 +115,7 @@ export function ChatKitPanel({
   onThemeRequest,
   sessionId: externalSessionId,
   initialMessages = [],
+  onSaveMessage,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
@@ -142,9 +149,25 @@ export function ChatKitPanel({
   const [inputValue, setInputValue] = useState("");
   const initializedRef = useRef(false);
 
+  // Ref for scrolling to bottom of messages
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
   const setErrorState = useCallback((updates: Partial<ErrorState>) => {
     setErrors((current) => ({ ...current, ...updates }));
   }, []);
+
+  // Scroll to bottom of messages
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior, block: "end" });
+    }
+  }, []);
+
+  // Auto-scroll when messages change or loading state changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [backendMessages, isBackendLoading, scrollToBottom]);
 
   useEffect(() => {
     return () => {
@@ -159,10 +182,13 @@ export function ChatKitPanel({
     }
   }, [externalSessionId, backendSessionId]);
 
-  // Update messages when initial messages change (e.g., loading a session)
+  // Update messages when initial messages change (e.g., loading a session from history)
+  // This should ONLY run when explicitly loading a saved session, not during normal chat
   useEffect(() => {
+    // Only restore messages from history when there are actual saved messages to restore
     if (initialMessages.length > 0 && !initializedRef.current) {
       initializedRef.current = true;
+      console.log("[ChatKitPanel] Restoring messages from history:", initialMessages.length);
       setBackendMessages(
         initialMessages.map((msg) => ({
           role: msg.role,
@@ -170,11 +196,9 @@ export function ChatKitPanel({
           citations: msg.citations,
         }))
       );
-    } else if (initialMessages.length === 0 && initializedRef.current) {
-      // Reset when starting a new chat
-      initializedRef.current = false;
-      setBackendMessages([]);
     }
+    // NOTE: Removed the else branch that was resetting messages to []
+    // That was causing issues - messages were being cleared unexpectedly
   }, [initialMessages]);
 
   // Script loading for ChatKit (only when not in backend mode)
@@ -282,56 +306,96 @@ export function ChatKitPanel({
       setIsBackendLoading(true);
       setErrorState({ integration: null });
 
-      // Add user message to chat
+      // Add user message to chat UI
       setBackendMessages((prev) => [
         ...prev,
         { role: "user", content: message },
       ]);
       setInputValue("");
 
+      // Save user message to history
+      if (onSaveMessage) {
+        try {
+          await onSaveMessage("user", message);
+          console.log("[ChatKitPanel] User message saved to history");
+        } catch (err) {
+          console.error("[ChatKitPanel] Failed to save user message:", err);
+        }
+      }
+
       try {
         const result: ChatResult = await sendChatMessageViaProxy(message, {
           sessionId: backendSessionId || undefined,
         });
 
-        if (!isMountedRef.current) return;
+        console.log("[ChatKitPanel] sendChatMessageViaProxy result:", result);
 
-        if (result.success) {
+        // Always reset loading state after receiving response
+        // Note: We no longer check isMountedRef here because the layout was
+        // causing unnecessary unmounts during session refresh. The state updates
+        // are safe even if the component briefly unmounts.
+        console.log("[ChatKitPanel] Response received, processing result");
+
+        if (result.success && result.message) {
+          console.log("[ChatKitPanel] Success! Adding assistant message:", result.message);
+
+          // Reset loading state FIRST to ensure UI updates
+          setIsBackendLoading(false);
+
+          // Then update the rest of the state
           setBackendSessionId(result.sessionId);
           setLastCitations(result.citations);
-          setBackendMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: result.message,
-              citations: result.citations,
-            },
-          ]);
+
+          // Add the assistant message
+          const assistantMessage = {
+            role: "assistant" as const,
+            content: result.message,
+            citations: result.citations,
+          };
+
+          setBackendMessages((prev) => {
+            const newMessages = [...prev, assistantMessage];
+            console.log("[ChatKitPanel] Updated messages count:", newMessages.length);
+            return newMessages;
+          });
+
+          // Save assistant message to history
+          if (onSaveMessage) {
+            try {
+              await onSaveMessage("assistant", result.message, result.citations);
+              console.log("[ChatKitPanel] Assistant message saved to history");
+            } catch (err) {
+              console.error("[ChatKitPanel] Failed to save assistant message:", err);
+            }
+          }
+
           onResponseEnd();
         } else {
+          console.log("[ChatKitPanel] Failed result:", {
+            success: result.success,
+            message: result.message,
+            error: result.error,
+          });
+          setIsBackendLoading(false);
           setErrorState({
-            integration: result.error || "Failed to get response",
+            integration: result.error || "Failed to get response or empty message",
             retryable: true,
           });
         }
       } catch (error) {
         console.error("Backend chat error:", error);
-        if (isMountedRef.current) {
-          setErrorState({
-            integration:
-              error instanceof Error
-                ? error.message
-                : "Failed to send message",
-            retryable: true,
-          });
-        }
-      } finally {
-        if (isMountedRef.current) {
-          setIsBackendLoading(false);
-        }
+        // Always reset loading state on error
+        setIsBackendLoading(false);
+        setErrorState({
+          integration:
+            error instanceof Error
+              ? error.message
+              : "Failed to send message",
+          retryable: true,
+        });
       }
     },
-    [backendSessionId, onResponseEnd, setErrorState]
+    [backendSessionId, onResponseEnd, setErrorState, onSaveMessage]
   );
 
   /**
@@ -524,10 +588,18 @@ export function ChatKitPanel({
 
   // Render backend mode chat interface
   if (useBackendMode) {
+    // Debug log on every render - show actual message contents
+    console.log("[ChatKitPanel] Rendering backend mode:", {
+      messagesCount: backendMessages.length,
+      isBackendLoading,
+      lastMessage: backendMessages.length > 0 ? backendMessages[backendMessages.length - 1] : null,
+      allMessageRoles: backendMessages.map(m => m.role),
+    });
+
     return (
-      <div className="relative flex h-[90vh] w-full flex-col rounded-2xl bg-white shadow-sm transition-colors dark:bg-slate-900">
-        {/* Chat messages area */}
-        <div className="flex-1 overflow-y-auto p-4">
+      <div className="relative flex h-[calc(100vh-12rem)] w-full flex-col rounded-2xl bg-white shadow-sm transition-colors dark:bg-slate-900">
+        {/* Chat messages area - takes remaining space and scrolls */}
+        <div ref={messagesContainerRef} className="min-h-0 flex-1 overflow-y-auto p-4">
           {backendMessages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center text-center">
               <h2 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
@@ -541,7 +613,7 @@ export function ChatKitPanel({
                   <button
                     key={index}
                     onClick={() => handleBackendSendMessage(prompt.prompt)}
-                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-750"
+                    className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:border-slate-500"
                   >
                     {prompt.label}
                   </button>
@@ -591,12 +663,14 @@ export function ChatKitPanel({
                   </div>
                 </div>
               )}
+              {/* Scroll anchor - always at the bottom */}
+              <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        {/* Input area */}
-        <div className="border-t border-slate-200 p-4 dark:border-slate-700">
+        {/* Input area - sticky at bottom */}
+        <div className="flex-shrink-0 border-t border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
           <form
             onSubmit={(e) => {
               e.preventDefault();

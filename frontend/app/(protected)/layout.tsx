@@ -14,7 +14,7 @@
  * Applies to: /chat, /history, /profile, /settings
  */
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -104,23 +104,38 @@ export default function ProtectedLayout({ children }: ProtectedLayoutProps) {
   const router = useRouter();
   const { user, isAuthenticated, isPending } = useAuth();
 
+  // Track if user was ever authenticated to prevent unmounting during session refresh
+  const [wasAuthenticated, setWasAuthenticated] = useState(false);
+
+  // Update wasAuthenticated when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setWasAuthenticated(true);
+    }
+  }, [isAuthenticated]);
+
   // Client-side redirect for unauthenticated users
   // This is a backup to middleware protection
+  // Only redirect if user was never authenticated (not just a temporary session refresh)
   useEffect(() => {
-    if (!isPending && !isAuthenticated) {
-      // Get current path for callback
-      const currentPath = window.location.pathname;
-      router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+    if (!isPending && !isAuthenticated && !wasAuthenticated) {
+      // Add a small delay to allow session state to settle after login redirect
+      const timeoutId = setTimeout(() => {
+        // Get current path for callback
+        const currentPath = window.location.pathname;
+        router.replace(`/login?callbackUrl=${encodeURIComponent(currentPath)}`);
+      }, 200);
+      return () => clearTimeout(timeoutId);
     }
-  }, [isAuthenticated, isPending, router]);
+  }, [isAuthenticated, isPending, wasAuthenticated, router]);
 
-  // Show loading while checking authentication
-  if (isPending) {
+  // Show loading only on initial auth check, not during session refresh
+  if (isPending && !wasAuthenticated) {
     return <LoadingState />;
   }
 
-  // Show loading while redirecting unauthenticated users
-  if (!isAuthenticated) {
+  // Show loading while redirecting unauthenticated users (only if never authenticated)
+  if (!isAuthenticated && !wasAuthenticated) {
     return <LoadingState />;
   }
 

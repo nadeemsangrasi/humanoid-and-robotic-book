@@ -169,8 +169,8 @@ export function ConversationList({
               group relative cursor-pointer rounded-lg border p-3 transition-all
               ${
                 isSelected
-                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20"
-                  : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-600 dark:hover:bg-gray-750"
+                  ? "border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30"
+                  : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-gray-500 dark:hover:bg-gray-700"
               }
               ${isDeleting ? "opacity-50 pointer-events-none" : ""}
             `}
@@ -224,7 +224,7 @@ export function ConversationList({
                 </button>
                 <button
                   onClick={handleCancelDelete}
-                  className="rounded bg-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                  className="rounded bg-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-300 dark:bg-gray-600 dark:text-gray-200 dark:hover:bg-gray-500"
                   aria-label="Cancel delete"
                 >
                   Cancel
@@ -235,10 +235,10 @@ export function ConversationList({
                 onClick={(e) => handleDeleteClick(e, session.id)}
                 className={`
                   absolute right-2 top-1/2 -translate-y-1/2 rounded p-1.5
-                  text-gray-400 opacity-0 transition-opacity
+                  text-gray-400 opacity-0 transition-all
                   hover:bg-red-100 hover:text-red-600
                   focus:opacity-100 group-hover:opacity-100
-                  dark:hover:bg-red-900/30 dark:hover:text-red-400
+                  dark:text-gray-500 dark:hover:bg-red-500/20 dark:hover:text-red-400
                 `}
                 aria-label={`Delete conversation: ${session.title || "New Conversation"}`}
               >

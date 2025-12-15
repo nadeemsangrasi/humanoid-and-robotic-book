@@ -1,14 +1,13 @@
-"""Authentication middleware for JWT token validation.
+"""Authentication middleware for user verification.
 
-This middleware extracts and validates JWT tokens from the Authorization header
-for protected routes. It integrates with Better Auth tokens from the frontend.
+This middleware extracts user email from X-User-Email header and verifies
+the user exists in the Neon PostgreSQL database.
 
 Features:
-- Extracts Bearer tokens from Authorization header
-- Validates JWT tokens using BETTER_AUTH_SECRET
+- Extracts X-User-Email header from frontend proxy requests
+- Verifies user exists in database
 - Attaches user info to request.state for downstream use
 - Skips authentication for health check endpoints
-- Logs authentication failures without exposing sensitive data
 
 Public endpoints (no auth required):
 - /health
@@ -29,9 +28,9 @@ from typing import Optional
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
-from app.core.security import User, verify_token
+from app.db import get_user_by_email, User
 from app.utils.logging import get_logger
 
 logger = get_logger(__name__)
@@ -54,71 +53,27 @@ PUBLIC_PATH_PREFIXES = (
 
 
 def get_client_ip(request: Request) -> str:
-    """Extract client IP address from request.
-
-    Handles X-Forwarded-For header for proxied requests.
-
-    Args:
-        request: The incoming FastAPI request.
-
-    Returns:
-        str: Client IP address or "unknown" if not available.
-    """
-    # Check X-Forwarded-For header (common when behind a proxy/load balancer)
+    """Extract client IP address from request."""
     forwarded_for = request.headers.get("X-Forwarded-For")
     if forwarded_for:
-        # Take the first IP in the chain (original client)
         return forwarded_for.split(",")[0].strip()
-
-    # Fall back to direct client
     if request.client and request.client.host:
         return request.client.host
-
     return "unknown"
 
 
 def is_public_path(path: str) -> bool:
-    """Check if a path is public (no authentication required).
-
-    Args:
-        path: The request path to check.
-
-    Returns:
-        bool: True if the path is public, False otherwise.
-    """
-    # Check exact matches
+    """Check if a path is public (no authentication required)."""
     if path in PUBLIC_PATHS:
         return True
-
-    # Check prefixes
     for prefix in PUBLIC_PATH_PREFIXES:
         if path.startswith(prefix):
             return True
-
     return False
 
 
-def log_auth_failure(
-    request: Request,
-    reason: str,
-    detail: Optional[str] = None,
-) -> None:
-    """Log authentication failure without exposing sensitive data.
-
-    Logs include:
-    - Timestamp (via logger)
-    - Client IP
-    - Request path
-    - Failure reason
-    - HTTP method
-
-    IMPORTANT: This function NEVER logs token values or secrets.
-
-    Args:
-        request: The incoming FastAPI request.
-        reason: Brief description of why authentication failed.
-        detail: Optional additional detail (must not contain sensitive data).
-    """
+def log_auth_failure(request: Request, reason: str, detail: Optional[str] = None) -> None:
+    """Log authentication failure."""
     client_ip = get_client_ip(request)
     timestamp = datetime.now(timezone.utc).isoformat()
 
@@ -133,114 +88,123 @@ def log_auth_failure(
     if detail:
         log_extra["detail"] = detail
 
-    logger.warning(
-        f"Authentication failed: {reason}",
-        extra=log_extra,
-    )
+    logger.warning(f"Authentication failed: {reason}", extra=log_extra)
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    """Middleware for JWT authentication.
+    """Middleware for user authentication via email verification.
 
     This middleware:
     1. Skips authentication for public endpoints
-    2. Extracts Bearer token from Authorization header
-    3. Validates the JWT token
+    2. Extracts X-User-Email header from frontend proxy
+    3. Verifies user exists in Neon PostgreSQL database
     4. Attaches user info to request.state.user if valid
-    5. Logs authentication failures for monitoring
-
-    The middleware does NOT return 401 errors directly - it only populates
-    request.state.user. The actual authentication enforcement is done by
-    the get_current_user dependency in protected endpoints.
-
-    This design allows for:
-    - Optional authentication on some endpoints
-    - Consistent error handling in endpoint dependencies
-    - Cleaner separation of concerns
-
-    Example:
-        # In main.py
-        from app.middleware import AuthMiddleware
-        app.add_middleware(AuthMiddleware)
-
-        # In endpoint
-        from app.dependencies.auth import get_current_user
-        @router.post("/chat")
-        async def chat(current_user: User = Depends(get_current_user)):
-            # current_user is guaranteed to be valid here
-            pass
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        """Process the request and validate authentication.
-
-        Args:
-            request: The incoming FastAPI request.
-            call_next: The next middleware or route handler.
-
-        Returns:
-            Response: The response from the route handler.
-        """
-        # Skip authentication for public paths
-        if is_public_path(request.url.path):
-            return await call_next(request)
-
-        # Initialize user as None (not authenticated)
-        request.state.user = None
-
-        # Extract Authorization header
-        auth_header = request.headers.get("Authorization")
-
-        if not auth_header:
-            log_auth_failure(
-                request,
-                reason="missing_authorization_header",
-                detail="No Authorization header provided",
-            )
-            return await call_next(request)
-
-        # Validate Bearer token format
-        if not auth_header.startswith("Bearer "):
-            log_auth_failure(
-                request,
-                reason="invalid_auth_format",
-                detail="Authorization header does not start with 'Bearer '",
-            )
-            return await call_next(request)
-
-        # Extract token (everything after "Bearer ")
-        token = auth_header[7:]  # len("Bearer ") = 7
-
-        if not token:
-            log_auth_failure(
-                request,
-                reason="empty_token",
-                detail="Bearer token is empty",
-            )
-            return await call_next(request)
-
-        # Validate the token
-        payload = verify_token(token)
-
-        if payload is None:
-            log_auth_failure(
-                request,
-                reason="invalid_token",
-                detail="Token validation failed",
-            )
-            return await call_next(request)
-
-        # Token is valid - create User and attach to request state
-        request.state.user = User(
-            id=payload.sub,
-            email=payload.email,
-            name=payload.name,
+        """Process the request and validate authentication."""
+        # Step 1: Log incoming request
+        logger.info(
+            "[AUTH STEP 1] Incoming request",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "client_ip": get_client_ip(request),
+            },
         )
 
-        logger.debug(
-            "User authenticated successfully",
+        # Step 2: Check if path is public
+        if is_public_path(request.url.path):
+            logger.info(
+                "[AUTH STEP 2] Public path - skipping authentication",
+                extra={"path": request.url.path},
+            )
+            return await call_next(request)
+
+        logger.info(
+            "[AUTH STEP 2] Protected path - proceeding with authentication",
+            extra={"path": request.url.path},
+        )
+
+        # Step 3: Initialize user as None (not authenticated)
+        request.state.user = None
+        logger.info("[AUTH STEP 3] Initialized request.state.user = None")
+
+        # Step 4: Extract X-User-Email header from frontend proxy
+        user_email = request.headers.get("X-User-Email")
+        logger.info(
+            "[AUTH STEP 4] Extracting X-User-Email header",
             extra={
-                "user_id": payload.sub,
+                "header_present": user_email is not None,
+                "email": user_email if user_email else "NOT PROVIDED",
+            },
+        )
+
+        if not user_email:
+            log_auth_failure(
+                request,
+                reason="missing_email_header",
+                detail="No X-User-Email header provided",
+            )
+            logger.info(
+                "[AUTH STEP 4] FAILED - No email header, returning 401 Unauthorized"
+            )
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "unauthorized",
+                    "message": "Authentication required. Please log in.",
+                },
+            )
+
+        # Step 5: Verify user exists in database
+        logger.info(
+            "[AUTH STEP 5] Querying database for user",
+            extra={"email": user_email},
+        )
+        db_user = await get_user_by_email(user_email)
+
+        if db_user is None:
+            log_auth_failure(
+                request,
+                reason="user_not_found",
+                detail=f"User with email {user_email} not found in database",
+            )
+            logger.info(
+                "[AUTH STEP 5] FAILED - User not found in database, returning 401 Unauthorized",
+                extra={"email": user_email},
+            )
+            return JSONResponse(
+                status_code=401,
+                content={
+                    "error": "unauthorized",
+                    "message": "User not found. Please log in with a valid account.",
+                },
+            )
+
+        logger.info(
+            "[AUTH STEP 5] SUCCESS - User found in database",
+            extra={
+                "user_id": db_user.id,
+                "user_name": db_user.name,
+                "user_email": db_user.email,
+                "email_verified": db_user.email_verified,
+            },
+        )
+
+        # Step 6: Attach user to request state
+        request.state.user = db_user
+        logger.info(
+            "[AUTH STEP 6] User attached to request.state",
+            extra={"user_id": db_user.id},
+        )
+
+        # Step 7: Proceed with request
+        logger.info(
+            "[AUTH STEP 7] Authentication complete - proceeding with request",
+            extra={
+                "user_id": db_user.id,
+                "user_email": db_user.email,
                 "path": request.url.path,
             },
         )
