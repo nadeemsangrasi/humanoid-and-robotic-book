@@ -5,6 +5,10 @@ import type { ChatKitOptions } from "@openai/chatkit";
  * Generated from ChatKit Studio and customized for Physical AI & Humanoid Robotics textbook
  */
 export const chatkitOptions: ChatKitOptions = {
+  api: {
+    url: "/api/chat",
+    domainKey: process.env.NEXT_PUBLIC_CHATKIT_DOMAIN_KEY || "local-dev",
+  },
   theme: {
     colorScheme: "light",
     radius: "pill",
@@ -65,7 +69,7 @@ export const chatkitOptions: ChatKitOptions = {
         label: "Ask textbook",
         shortLabel: "Textbook",
         placeholderOverride: "Ask about Physical AI & Robotics",
-        icon: "graduation-cap",
+        icon: "notebook",
         pinned: true,
       },
     ],
@@ -79,17 +83,17 @@ export const chatkitOptions: ChatKitOptions = {
         prompt: "What is ChatKit?",
       },
       {
-        icon: "robot",
+        icon: "cube",
         label: "Explain humanoid robotics",
         prompt: "What are the key components of humanoid robotics?",
       },
       {
-        icon: "brain",
+        icon: "sparkle",
         label: "What is Physical AI?",
         prompt: "Explain Physical AI and its applications in robotics.",
       },
       {
-        icon: "cog",
+        icon: "settings-slider",
         label: "Robot kinematics",
         prompt: "Explain forward and inverse kinematics in robotics.",
       },
@@ -108,11 +112,12 @@ export const chatkitOptions: ChatKitOptions = {
 export function getChatkitOptions(
   colorScheme: "light" | "dark" = "light"
 ): ChatKitOptions {
+  const baseTheme = chatkitOptions.theme;
   return {
     ...chatkitOptions,
-    theme: {
-      ...chatkitOptions.theme,
-      colorScheme,
-    },
+    theme:
+      typeof baseTheme === "object"
+        ? { ...baseTheme, colorScheme }
+        : colorScheme,
   };
 }

@@ -612,7 +612,12 @@ export function ChatKitPanel({
                 {STARTER_PROMPTS.map((prompt, index) => (
                   <button
                     key={index}
-                    onClick={() => handleBackendSendMessage(prompt.prompt)}
+                    onClick={() => {
+                      const promptText = typeof prompt.prompt === "string"
+                        ? prompt.prompt
+                        : prompt.prompt.map(c => typeof c === "string" ? c : "").join("");
+                      handleBackendSendMessage(promptText);
+                    }}
                     className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition-colors hover:bg-slate-100 hover:border-slate-300 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:border-slate-500"
                   >
                     {prompt.label}

@@ -140,7 +140,7 @@ export function RegisterForm() {
         provider,
         callbackURL: "/chat",
       });
-    } catch (error) {
+    } catch {
       setIsOAuthLoading(null);
       setErrors({
         general: `Failed to sign up with ${provider === "google" ? "Google" : "GitHub"}. Please try again.`,

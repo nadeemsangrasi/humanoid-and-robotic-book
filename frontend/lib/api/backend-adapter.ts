@@ -7,7 +7,6 @@
  * @module lib/api/backend-adapter
  */
 
-import { BACKEND_URL } from "@/lib/config";
 
 /**
  * Citation returned from the RAG backend

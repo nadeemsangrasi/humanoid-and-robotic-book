@@ -17,7 +17,7 @@
  */
 
 import { useState, type FormEvent, type ChangeEvent } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "@/lib/auth-client";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -110,7 +110,6 @@ function validateForm(data: FormData): FormErrors {
  */
 export function LoginForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const callbackUrl = "/chat";
   const { refetch } = useAuth();
 
@@ -133,7 +132,7 @@ export function LoginForm() {
         provider,
         callbackURL: callbackUrl,
       });
-    } catch (error) {
+    } catch {
       setIsOAuthLoading(null);
       setErrors({
         general: `Failed to sign in with ${provider === "google" ? "Google" : "GitHub"}. Please try again.`,

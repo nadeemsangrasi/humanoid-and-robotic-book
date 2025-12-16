@@ -16,17 +16,17 @@ export const STARTER_PROMPTS: StartScreenPrompt[] = [
   {
     label: "What is Physical AI?",
     prompt: "Explain Physical AI and its applications in robotics.",
-    icon: "brain",
+    icon: "sparkle",
   },
   {
     label: "Humanoid robotics basics",
     prompt: "What are the key components of humanoid robotics?",
-    icon: "robot",
+    icon: "cube",
   },
   {
     label: "Robot kinematics",
     prompt: "Explain forward and inverse kinematics in robotics.",
-    icon: "cog",
+    icon: "settings-slider",
   },
   {
     label: "ROS2 fundamentals",

@@ -182,7 +182,7 @@ export function ConversationList({
                 onSelectSession(session.id);
               }
             }}
-            aria-selected={isSelected}
+            aria-pressed={isSelected}
             aria-label={`Conversation: ${session.title || "New Conversation"}`}
           >
             {/* Title */}

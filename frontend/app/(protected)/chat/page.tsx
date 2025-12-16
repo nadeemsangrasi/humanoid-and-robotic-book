@@ -17,7 +17,6 @@ import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
 import { useColorScheme, type ColorScheme } from "@/hooks/useColorScheme";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useChatHistory } from "@/hooks/useChatHistory";
-import { NewChatButtonCompact } from "@/components/chat/NewChatButton";
 
 /**
  * Chat Page Metadata (client component - using document.title)
