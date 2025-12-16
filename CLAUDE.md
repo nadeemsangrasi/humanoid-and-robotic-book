@@ -265,3 +265,10 @@ Wait for consent; never auto-create ADRs. Group related decisions (stacks, authe
 
 ## Code Standards
 See `.specify/memory/constitution.md` for code quality, testing, performance, security, and architecture principles.
+
+## Active Technologies
+- TypeScript 5.x, React 19.x, Next.js 15.x (004-book-chatbot-integration)
+- PostgreSQL Neon DB via Drizzle ORM (existing schema with user, session, account, verification, chatSession, chatMessage tables) (004-book-chatbot-integration)
+
+## Recent Changes
+- 004-book-chatbot-integration: Added TypeScript 5.x, React 19.x, Next.js 15.x
