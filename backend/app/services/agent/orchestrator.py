@@ -81,8 +81,8 @@ class AgentOrchestrator:
         # Configure AsyncOpenAI client to use Google Gemini
         # The base_url points to Gemini's OpenAI-compatible endpoint
         self.client = AsyncOpenAI(
-            api_key=settings.google_api_key,
-            base_url=settings.gemini_base_url,
+            api_key=settings.openrouter_api_key,
+            base_url=settings.openrouter_base_url,
         )
 
         # Wrap the client and model in OpenAIChatCompletionsModel

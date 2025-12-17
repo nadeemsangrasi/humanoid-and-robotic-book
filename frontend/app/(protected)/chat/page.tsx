@@ -12,7 +12,7 @@
  * Route: /chat (protected)
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { signOut } from "@/lib/auth-client";
@@ -20,7 +20,6 @@ import { useChatHistory, type ChatHistoryMessage } from "@/hooks/useChatHistory"
 import { useTheme } from "@/hooks/useTheme";
 import {
   sendChatMessageViaProxy,
-  type Citation,
   type ChatResult,
 } from "@/lib/api/backend-adapter";
 import { STARTER_PROMPTS, PLACEHOLDER_INPUT, GREETING } from "@/lib/config";
@@ -43,7 +42,6 @@ import {
   LogOut,
   History,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
 // Types
@@ -55,9 +53,34 @@ interface Conversation {
 }
 
 /**
- * Main Chat Page Component
+ * Main Chat Page Component - Wrapper with Suspense
  */
 export default function ChatPage() {
+  return (
+    <Suspense fallback={<ChatPageLoading />}>
+      <ChatPageContent />
+    </Suspense>
+  );
+}
+
+/**
+ * Loading fallback for chat page
+ */
+function ChatPageLoading() {
+  return (
+    <div className="flex h-[calc(100vh-64px)] items-center justify-center bg-background">
+      <div className="text-center">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-sm text-foreground-muted">Loading chat...</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Chat Page Content - Uses useSearchParams
+ */
+function ChatPageContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();

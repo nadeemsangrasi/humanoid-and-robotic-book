@@ -25,6 +25,8 @@ class Settings(BaseSettings):
         - BETTER_AUTH_SECRET: Secret key for JWT validation (must match frontend)
 
     Optional environment variables (with defaults):
+        - OPENROUTER_API_KEY: OpenRouter API key (default: None)
+        - OPENROUTER_BASE_URL: OpenRouter API base URL (default: https://openrouter.ai/api/v1)
         - LOG_LEVEL: Logging level (default: INFO)
         - COLLECTION_NAME: Qdrant collection name (default: book_chunks)
         - EMBEDDING_MODEL: Google embedding model (default: models/text-embedding-004)
@@ -63,6 +65,20 @@ class Settings(BaseSettings):
     database_url: str = Field(
         ...,
         description="PostgreSQL database URL (Neon) for user verification",
+    )
+
+    # -------------------------------------------------------------------------
+    # Optional: OpenRouter Configuration
+    # -------------------------------------------------------------------------
+
+    openrouter_api_key: str | None = Field(
+        default=None,
+        description="OpenRouter API key for accessing various LLM models via OpenRouter",
+    )
+
+    openrouter_base_url: str = Field(
+        default="https://openrouter.ai/api/v1",
+        description="OpenRouter API base URL",
     )
 
     # -------------------------------------------------------------------------
@@ -339,6 +355,8 @@ def print_settings_summary(settings: Settings) -> None:
     print(f"  QDRANT_URL:         {settings.qdrant_url}")
     print(f"  QDRANT_API_KEY:     {mask_secret(settings.qdrant_api_key)}")
     print(f"  DATABASE_URL:       {mask_secret(settings.database_url)}")
+    print(f"  OPENROUTER_API_KEY: {mask_secret(settings.openrouter_api_key) if settings.openrouter_api_key else 'Not set'}")
+    print(f"  OPENROUTER_BASE_URL:{settings.openrouter_base_url}")
     print(f"  LOG_LEVEL:          {settings.log_level}")
     print(f"  COLLECTION_NAME:    {settings.collection_name}")
     print(f"  EMBEDDING_MODEL:    {settings.embedding_model}")
