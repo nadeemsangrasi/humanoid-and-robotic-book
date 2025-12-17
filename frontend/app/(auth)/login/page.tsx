@@ -26,13 +26,17 @@ export const metadata = {
 function FormSkeleton() {
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 animate-pulse">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mx-auto mb-4" />
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mx-auto mb-8" />
-        <div className="space-y-6">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="h-10 bg-blue-200 dark:bg-blue-800 rounded" />
+      <div className="bg-background-secondary border border-border shadow-lg rounded-xl p-8 animate-pulse">
+        <div className="h-8 bg-foreground-muted/20 rounded w-3/4 mx-auto mb-4" />
+        <div className="h-4 bg-foreground-muted/20 rounded w-1/2 mx-auto mb-8" />
+        <div className="space-y-5">
+          <div className="h-12 bg-foreground-muted/20 rounded-lg" />
+          <div className="h-12 bg-foreground-muted/20 rounded-lg" />
+          <div className="h-12 bg-primary/30 rounded-lg" />
+        </div>
+        <div className="mt-6 space-y-3">
+          <div className="h-12 bg-foreground-muted/20 rounded-lg" />
+          <div className="h-12 bg-foreground-muted/20 rounded-lg" />
         </div>
       </div>
     </div>

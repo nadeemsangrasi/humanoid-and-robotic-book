@@ -6,48 +6,52 @@
  */
 
 export const THEME_COLORS = {
-  // Primary Gradient
-  primary: "#667eea",
-  primaryDark: "#5a67d8",
-  primaryLight: "#7c87ec",
+  // Primary - Indigo
+  primary: "#6366f1",
+  primaryDark: "#4f46e5",
+  primaryLight: "#818cf8",
 
-  // Secondary (Gradient end)
-  secondary: "#764ba2",
-  secondaryDark: "#6b4190",
-  secondaryLight: "#8b5cb5",
+  // Secondary - Violet
+  secondary: "#8b5cf6",
+  secondaryDark: "#7c3aed",
+  secondaryLight: "#a78bfa",
 
-  // Accent
-  accent: "#25c2a0",
-  accentDark: "#1fa88c",
-  accentLight: "#3cd4b2",
+  // Accent - Emerald
+  accent: "#10b981",
+  accentDark: "#059669",
+  accentLight: "#34d399",
 
   // Neutrals - Light Theme
   light: {
     bg: "#ffffff",
     bgSecondary: "#f8fafc",
     bgTertiary: "#f1f5f9",
+    bgElevated: "#ffffff",
     textPrimary: "#0f172a",
     textSecondary: "#475569",
     textMuted: "#94a3b8",
     border: "#e2e8f0",
+    hoverBg: "rgba(0, 0, 0, 0.04)",
   },
 
   // Neutrals - Dark Theme
   dark: {
-    bg: "#0f172a",
-    bgSecondary: "#1e293b",
-    bgTertiary: "#334155",
-    textPrimary: "#f8fafc",
-    textSecondary: "#cbd5e1",
-    textMuted: "#64748b",
-    border: "#334155",
+    bg: "#0a0a0f",
+    bgSecondary: "#141419",
+    bgTertiary: "#1e1e26",
+    bgElevated: "#1a1a22",
+    textPrimary: "#f4f4f5",
+    textSecondary: "#a1a1aa",
+    textMuted: "#71717a",
+    border: "#27272a",
+    hoverBg: "rgba(255, 255, 255, 0.06)",
   },
 } as const;
 
 export const GRADIENTS = {
-  primary: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  primaryHover: "linear-gradient(135deg, #5a67d8 0%, #6b4190 100%)",
-  accent: "linear-gradient(135deg, #25c2a0 0%, #1fa88c 100%)",
+  primary: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+  primaryHover: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+  accent: "linear-gradient(135deg, #10b981 0%, #059669 100%)",
 } as const;
 
 export const SHADOWS = {
@@ -55,8 +59,8 @@ export const SHADOWS = {
   md: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
   lg: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
   xl: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
-  fab: "0 4px 12px rgba(102, 126, 234, 0.4)",
-  fabHover: "0 6px 20px rgba(102, 126, 234, 0.5)",
+  fab: "0 8px 24px rgba(99, 102, 241, 0.35)",
+  fabHover: "0 12px 32px rgba(99, 102, 241, 0.45)",
 } as const;
 
 export const TRANSITIONS = {

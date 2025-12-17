@@ -2,9 +2,7 @@ import Script from "next/script";
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth/AuthProvider";
-import { Navbar } from "@/components/layout/Navbar";
-import { InstantChatProvider } from "@/components/instant-chat";
-import { NAVBAR_HEIGHT } from "@/lib/constants";
+import ConditionalLayout from "@/components/layout/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "Physical AI & Humanoid Robotics",
@@ -27,9 +25,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <AuthProvider>
-          <Navbar />
-          <main style={{ paddingTop: NAVBAR_HEIGHT }}>{children}</main>
-          <InstantChatProvider />
+          <ConditionalLayout>{children}</ConditionalLayout>
         </AuthProvider>
       </body>
     </html>

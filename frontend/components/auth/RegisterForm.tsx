@@ -14,6 +14,7 @@
  * - Loading state during submission
  * - Error display
  * - Redirect to /chat on success
+ * - Full dark/light mode support
  */
 
 import { useState, type FormEvent, type ChangeEvent } from "react";
@@ -21,6 +22,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signUp, signIn } from "@/lib/auth-client";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { cn } from "@/lib/utils";
 
 /**
  * Google Icon SVG Component
@@ -208,21 +210,21 @@ export function RegisterForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8">
+      <div className="bg-background-secondary border border-border shadow-lg rounded-xl p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-foreground">
             Create an Account
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-foreground-secondary mt-2">
             Join Physical AI & Humanoid Robotics
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* General Error */}
           {errors.general && (
             <div
-              className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-md text-sm"
+              className="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-3 rounded-lg text-sm"
               role="alert"
             >
               {errors.general}
@@ -233,7 +235,7 @@ export function RegisterForm() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-foreground-secondary mb-2"
             >
               Full Name
             </label>
@@ -245,17 +247,18 @@ export function RegisterForm() {
               value={formData.name}
               onChange={handleChange}
               disabled={isLoading}
-              className={`
-                w-full px-4 py-2 border rounded-md shadow-sm
-                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-100 disabled:cursor-not-allowed
-                dark:bg-gray-700 dark:border-gray-600 dark:text-white
-                ${errors.name ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-              `}
+              className={cn(
+                "w-full px-4 py-3 rounded-lg",
+                "bg-background border transition-all duration-200",
+                "text-foreground placeholder:text-foreground-muted",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                errors.name ? "border-red-500" : "border-border"
+              )}
               placeholder="Enter your full name"
             />
             {errors.name && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.name}
               </p>
             )}
@@ -265,7 +268,7 @@ export function RegisterForm() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-foreground-secondary mb-2"
             >
               Email Address
             </label>
@@ -277,17 +280,18 @@ export function RegisterForm() {
               value={formData.email}
               onChange={handleChange}
               disabled={isLoading}
-              className={`
-                w-full px-4 py-2 border rounded-md shadow-sm
-                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-100 disabled:cursor-not-allowed
-                dark:bg-gray-700 dark:border-gray-600 dark:text-white
-                ${errors.email ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-              `}
+              className={cn(
+                "w-full px-4 py-3 rounded-lg",
+                "bg-background border transition-all duration-200",
+                "text-foreground placeholder:text-foreground-muted",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                errors.email ? "border-red-500" : "border-border"
+              )}
               placeholder="Enter your email"
             />
             {errors.email && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.email}
               </p>
             )}
@@ -297,7 +301,7 @@ export function RegisterForm() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-foreground-secondary mb-2"
             >
               Password
             </label>
@@ -309,17 +313,18 @@ export function RegisterForm() {
               value={formData.password}
               onChange={handleChange}
               disabled={isLoading}
-              className={`
-                w-full px-4 py-2 border rounded-md shadow-sm
-                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-100 disabled:cursor-not-allowed
-                dark:bg-gray-700 dark:border-gray-600 dark:text-white
-                ${errors.password ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-              `}
+              className={cn(
+                "w-full px-4 py-3 rounded-lg",
+                "bg-background border transition-all duration-200",
+                "text-foreground placeholder:text-foreground-muted",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                errors.password ? "border-red-500" : "border-border"
+              )}
               placeholder="Create a password (min. 8 characters)"
             />
             {errors.password && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.password}
               </p>
             )}
@@ -329,7 +334,7 @@ export function RegisterForm() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-foreground-secondary mb-2"
             >
               Confirm Password
             </label>
@@ -341,17 +346,18 @@ export function RegisterForm() {
               value={formData.confirmPassword}
               onChange={handleChange}
               disabled={isLoading}
-              className={`
-                w-full px-4 py-2 border rounded-md shadow-sm
-                focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                disabled:bg-gray-100 disabled:cursor-not-allowed
-                dark:bg-gray-700 dark:border-gray-600 dark:text-white
-                ${errors.confirmPassword ? "border-red-500" : "border-gray-300 dark:border-gray-600"}
-              `}
+              className={cn(
+                "w-full px-4 py-3 rounded-lg",
+                "bg-background border transition-all duration-200",
+                "text-foreground placeholder:text-foreground-muted",
+                "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                errors.confirmPassword ? "border-red-500" : "border-border"
+              )}
               placeholder="Confirm your password"
             />
             {errors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.confirmPassword}
               </p>
             )}
@@ -361,16 +367,14 @@ export function RegisterForm() {
           <button
             type="submit"
             disabled={isLoading || isOAuthLoading !== null}
-            className={`
-              w-full py-2 px-4 rounded-md font-medium text-white
-              transition-colors duration-200
-              ${
-                isLoading || isOAuthLoading !== null
-                  ? "bg-blue-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
-              }
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            `}
+            className={cn(
+              "w-full py-3 px-4 rounded-lg font-medium text-white",
+              "transition-all duration-200",
+              "focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background",
+              isLoading || isOAuthLoading !== null
+                ? "bg-primary/60 cursor-not-allowed"
+                : "bg-primary hover:bg-primary-dark active:scale-[0.98]"
+            )}
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
@@ -405,10 +409,10 @@ export function RegisterForm() {
         {/* OAuth Divider */}
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            <div className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="bg-white dark:bg-gray-800 px-2 text-gray-500 dark:text-gray-400">
+            <span className="bg-background-secondary px-3 text-foreground-muted">
               Or continue with
             </span>
           </div>
@@ -421,23 +425,20 @@ export function RegisterForm() {
             type="button"
             onClick={() => handleOAuthSignUp("google")}
             disabled={isLoading || isOAuthLoading !== null}
-            className={`
-              w-full flex items-center justify-center gap-3 py-2 px-4
-              border border-gray-300 dark:border-gray-600 rounded-md
-              bg-white dark:bg-gray-700
-              text-gray-700 dark:text-gray-200 font-medium
-              transition-colors duration-200
-              ${
-                isLoading || isOAuthLoading !== null
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-50 dark:hover:bg-gray-600"
-              }
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-            `}
+            className={cn(
+              "w-full flex items-center justify-center gap-3 py-3 px-4",
+              "border border-border rounded-lg",
+              "bg-background text-foreground font-medium",
+              "transition-all duration-200",
+              isLoading || isOAuthLoading !== null
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-hover-bg hover:border-hover-border active:scale-[0.98]",
+              "focus:outline-none focus:ring-2 focus:ring-primary/50"
+            )}
           >
             {isOAuthLoading === "google" ? (
               <svg
-                className="animate-spin h-5 w-5 text-gray-600 dark:text-gray-300"
+                className="animate-spin h-5 w-5 text-foreground-muted"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -467,23 +468,20 @@ export function RegisterForm() {
             type="button"
             onClick={() => handleOAuthSignUp("github")}
             disabled={isLoading || isOAuthLoading !== null}
-            className={`
-              w-full flex items-center justify-center gap-3 py-2 px-4
-              border border-gray-300 dark:border-gray-600 rounded-md
-              bg-gray-900 dark:bg-gray-950
-              text-white font-medium
-              transition-colors duration-200
-              ${
-                isLoading || isOAuthLoading !== null
-                  ? "opacity-50 cursor-not-allowed"
-                  : "hover:bg-gray-800 dark:hover:bg-gray-900"
-              }
-              focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
-            `}
+            className={cn(
+              "w-full flex items-center justify-center gap-3 py-3 px-4",
+              "border border-border rounded-lg",
+              "bg-foreground text-background font-medium",
+              "transition-all duration-200",
+              isLoading || isOAuthLoading !== null
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:opacity-90 active:scale-[0.98]",
+              "focus:outline-none focus:ring-2 focus:ring-foreground/50"
+            )}
           >
             {isOAuthLoading === "github" ? (
               <svg
-                className="animate-spin h-5 w-5 text-white"
+                className="animate-spin h-5 w-5"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -511,11 +509,11 @@ export function RegisterForm() {
 
         {/* Sign In Link */}
         <div className="mt-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-foreground-secondary">
             Already have an account?{" "}
             <Link
               href="/login"
-              className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+              className="font-medium text-primary hover:text-primary-dark transition-colors"
             >
               Sign in
             </Link>

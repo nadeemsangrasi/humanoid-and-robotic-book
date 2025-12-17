@@ -18,7 +18,11 @@ const footerLinks = {
   ],
   resources: [
     { label: "Documentation", href: "/book" },
-    { label: "GitHub", href: "https://github.com", external: true },
+    {
+      label: "GitHub",
+      href: "https://nadeemsangrasi.github.io/humanoid-and-robotic-book",
+      external: true,
+    },
     { label: "ROS2 Docs", href: "https://docs.ros.org", external: true },
   ],
   legal: [
@@ -144,8 +148,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-foreground-muted">
-            {currentYear} Physical AI & Humanoid Robotics. All rights
-            reserved.
+            {currentYear} Physical AI & Humanoid Robotics. All rights reserved.
           </p>
           <p className="text-sm text-foreground-muted">
             Built with Next.js, Docusaurus & AI

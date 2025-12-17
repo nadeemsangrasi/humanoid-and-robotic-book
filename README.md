@@ -47,7 +47,7 @@ The textbook is organized into four progressive modules:
 
 The textbook includes an AI-powered chatbot that answers questions based on the textbook content using Retrieval-Augmented Generation (RAG).
 
-### Architecture
+### Backend Architecture
 
 ```
 User Question → Embedding (Gemini) → Vector Search (Qdrant) → AI Response (Gemini)
@@ -61,6 +61,18 @@ User Question → Embedding (Gemini) → Vector Search (Qdrant) → AI Response 
 | LLM | Google Gemini 2.0 Flash | Answer generation with citations |
 | Agent Framework | OpenAI Agent SDK | Tool-calling AI orchestration |
 | Deployment | Docker + Hugging Face Spaces | Free hosting |
+
+### Frontend Architecture
+
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| UI Framework | Next.js 15 + React 19 | Modern web application with App Router |
+| Chat UI | OpenAI ChatKit | Pre-built chat interface components |
+| Authentication | Better Auth | User authentication and session management |
+| Database | PostgreSQL Neon + Drizzle ORM | User data and chat history storage |
+| Styling | Tailwind CSS + Custom CSS | Responsive design with theme support |
+| Theme System | CSS Custom Properties | Light/dark mode with localStorage persistence |
+| Deployment | Vercel (frontend), Hugging Face Spaces (backend) | Static hosting for frontend, container hosting for backend |
 
 ### API Endpoints
 
@@ -102,6 +114,46 @@ SCORE_THRESHOLD=0.7
 ```
 
 See [`backend/README.md`](./backend/README.md) for detailed backend documentation.
+
+## Frontend Setup
+
+### Quick Start (Frontend)
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+```
+
+### Frontend Environment Variables
+
+Create a `.env.local` file in the `frontend/` directory:
+
+```bash
+# Better Auth Configuration
+NEXT_PUBLIC_BETTER_AUTH_URL=http://localhost:3000
+BETTER_AUTH_SECRET=your_secret_key_here
+
+# Backend API Configuration
+NEXT_PUBLIC_BACKEND_URL=http://localhost:7860
+```
+
+### Frontend Architecture
+
+The frontend is built with Next.js 15 using the App Router and includes:
+
+- **Authentication**: Better Auth for user management
+- **Database**: PostgreSQL Neon DB with Drizzle ORM for user data
+- **Chat Interface**: OpenAI ChatKit components for conversation UI
+- **Theme System**: CSS custom properties with light/dark mode support
+- **Responsive Design**: Mobile-first approach with Tailwind CSS
 
 ## Prerequisites
 
@@ -181,7 +233,25 @@ See [`backend/README.md`](./backend/README.md) for detailed backend documentatio
 
 ## Deployment
 
+### Textbook (Docusaurus)
 The textbook is deployed on GitHub Pages at: [https://nadeemsangrasi.github.io/humanoid-and-robotic-book/](https://nadeemsangrasi.github.io/humanoid-and-robotic-book/)
+
+### Frontend Application
+The chatbot frontend is deployed on Vercel:
+- Build command: `npm run build`
+- Output directory: `out/`
+- Environment variables required (see Frontend Environment Variables section)
+
+### Backend API
+The RAG chatbot backend is deployed on Hugging Face Spaces (Docker mode):
+- Dockerfile included in backend/
+- Environment variables configured in Hugging Face secrets
+- Free tier deployment with Docker container
+
+### Architecture Overview
+```
+User → Vercel Frontend → Hugging Face Backend → Qdrant Vector DB → Google Gemini APIs
+```
 
 ## Contributing
 
