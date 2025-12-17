@@ -337,6 +337,31 @@ export function ChatPage() {
 | `onResponseEnd` | `() => void` | Called when response completes |
 | `onThemeRequest` | `(scheme) => void` | Handle theme change requests |
 
+### Theme Synchronization with Book Iframe
+
+The book page (`/book`) synchronizes the theme with the embedded textbook iframe by appending a `theme` parameter to the iframe URL. When the user changes the theme, the iframe reloads with the updated theme parameter.
+
+**Implementation**:
+1. The `useTheme` hook tracks the current theme state
+2. The book page constructs the iframe URL with `?theme=light` or `?theme=dark`
+3. When theme changes, the iframe src is updated to reflect the new theme
+4. The Docusaurus textbook site must implement reading the theme parameter and applying the appropriate theme
+
+**Code example**:
+```tsx
+// In app/book/page.tsx
+const { theme, mounted } = useTheme();
+const bookUrlWithTheme = mounted ? `${BOOK_URL}?theme=${theme}` : BOOK_URL;
+
+// The iframe src uses the themed URL
+<iframe src={bookUrlWithTheme} ... />
+```
+
+**Requirements for Docusaurus textbook**:
+- Must read the `theme` query parameter from the URL
+- Must apply the corresponding theme (light/dark) to the page
+- Should gracefully handle missing theme parameter (default to light theme)
+
 ---
 
 ## Route Protection

@@ -6,40 +6,44 @@
 
 :root {
   /* Primary Colors */
-  --color-primary: #667eea;
-  --color-primary-dark: #5a67d8;
-  --color-primary-light: #7c87ec;
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
+  --color-primary-light: #818cf8;
 
   /* Secondary Colors */
-  --color-secondary: #764ba2;
-  --color-secondary-dark: #6b4190;
-  --color-secondary-light: #8b5cb5;
+  --color-secondary: #8b5cf6;
+  --color-secondary-dark: #7c3aed;
+  --color-secondary-light: #a78bfa;
 
   /* Accent Colors */
-  --color-accent: #25c2a0;
-  --color-accent-dark: #1fa88c;
-  --color-accent-light: #3cd4b2;
+  --color-accent: #10b981;
+  --color-accent-dark: #059669;
+  --color-accent-light: #34d399;
 
   /* Light Theme (Default) */
   --background: #ffffff;
   --background-secondary: #f8fafc;
   --background-tertiary: #f1f5f9;
+  --background-elevated: #ffffff;
   --foreground: #0f172a;
   --foreground-secondary: #475569;
   --foreground-muted: #94a3b8;
   --border-color: #e2e8f0;
-  --hover-bg: #f3f4f6;
-  --hover-border: #d1d5db;
+  --hover-bg: rgba(0, 0, 0, 0.04);
+  --hover-border: #cbd5e1;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-fab: 0 4px 12px rgba(102, 126, 234, 0.4);
+  --shadow-fab: 0 8px 24px rgba(99, 102, 241, 0.35);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-primary-hover: linear-gradient(135deg, #5a67d8 0%, #6b4190 100%);
+  --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-primary-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+
+  /* Text on primary backgrounds */
+  --text-on-primary: #ffffff;
 
   /* Navbar */
   --navbar-height: 64px;
@@ -50,51 +54,57 @@
 /* Dark Theme */
 .dark,
 :root.dark {
-  --background: #0f172a;
-  --background-secondary: #1e293b;
-  --background-tertiary: #334155;
-  --foreground: #f8fafc;
-  --foreground-secondary: #cbd5e1;
-  --foreground-muted: #64748b;
-  --border-color: #334155;
-  --hover-bg: #374151;
-  --hover-border: #4b5563;
+  --background: #0a0a0f;
+  --background-secondary: #141419;
+  --background-tertiary: #1e1e26;
+  --background-elevated: #1a1a22;
+  --foreground: #f4f4f5;
+  --foreground-secondary: #a1a1aa;
+  --foreground-muted: #71717a;
+  --border-color: #27272a;
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --hover-border: #3f3f46;
 
   /* Adjusted shadows for dark mode */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-  --shadow-fab: 0 4px 12px rgba(102, 126, 234, 0.6);
+  --shadow-fab: 0 8px 24px rgba(99, 102, 241, 0.4);
+
+  /* Text on primary backgrounds */
+  --text-on-primary: #ffffff;
 
   color-scheme: dark;
 }
 
 /* Legacy data attribute support */
 :root[data-color-scheme="dark"] {
-  --background: #0f172a;
-  --background-secondary: #1e293b;
-  --background-tertiary: #334155;
-  --foreground: #f8fafc;
-  --foreground-secondary: #cbd5e1;
-  --foreground-muted: #64748b;
-  --border-color: #334155;
-  --hover-bg: #374151;
-  --hover-border: #4b5563;
+  --background: #0a0a0f;
+  --background-secondary: #141419;
+  --background-tertiary: #1e1e26;
+  --background-elevated: #1a1a22;
+  --foreground: #f4f4f5;
+  --foreground-secondary: #a1a1aa;
+  --foreground-muted: #71717a;
+  --border-color: #27272a;
+  --hover-bg: rgba(255, 255, 255, 0.06);
+  --hover-border: #3f3f46;
   color-scheme: dark;
 }
 
 /* System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root:not(.light):not([data-color-scheme="light"]) {
-    --background: #0f172a;
-    --background-secondary: #1e293b;
-    --background-tertiary: #334155;
-    --foreground: #f8fafc;
-    --foreground-secondary: #cbd5e1;
-    --foreground-muted: #64748b;
-    --border-color: #334155;
-    --hover-bg: #374151;
-    --hover-border: #4b5563;
+    --background: #0a0a0f;
+    --background-secondary: #141419;
+    --background-tertiary: #1e1e26;
+    --background-elevated: #1a1a22;
+    --foreground: #f4f4f5;
+    --foreground-secondary: #a1a1aa;
+    --foreground-muted: #71717a;
+    --border-color: #27272a;
+    --hover-bg: rgba(255, 255, 255, 0.06);
+    --hover-border: #3f3f46;
     color-scheme: dark;
   }
 }
@@ -107,13 +117,18 @@
   --color-background: var(--background);
   --color-background-secondary: var(--background-secondary);
   --color-background-tertiary: var(--background-tertiary);
+  --color-background-elevated: var(--background-elevated);
   --color-foreground: var(--foreground);
   --color-foreground-secondary: var(--foreground-secondary);
   --color-foreground-muted: var(--foreground-muted);
   --color-border: var(--border-color);
+  --color-hover-bg: var(--hover-bg);
   --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
   --color-secondary: var(--color-secondary);
   --color-accent: var(--color-accent);
+  --color-text-on-primary: var(--text-on-primary);
   --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "SF Mono", SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
 }
@@ -127,6 +142,34 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ============================================
+   Form Input Placeholder Styles
+   ============================================ */
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--foreground-muted);
+  opacity: 1;
+}
+
+input::-webkit-input-placeholder,
+textarea::-webkit-input-placeholder {
+  color: var(--foreground-muted);
+  opacity: 1;
+}
+
+input::-moz-placeholder,
+textarea::-moz-placeholder {
+  color: var(--foreground-muted);
+  opacity: 1;
+}
+
+input:-ms-input-placeholder,
+textarea:-ms-input-placeholder {
+  color: var(--foreground-muted);
+  opacity: 1;
 }
 
 /* ============================================
@@ -148,6 +191,28 @@ body {
 /* ============================================
    Component Utilities
    ============================================ */
+
+/* Hover utilities */
+.hover-bg {
+  background-color: var(--hover-bg) !important;
+}
+
+.hover-text {
+  color: var(--foreground) !important;
+}
+
+.hover-border {
+  border-color: var(--hover-border) !important;
+}
+
+.hover-opacity {
+  opacity: 0.8 !important;
+}
+
+.hover-scale {
+  transform: scale(1.02) !important;
+  transition: transform 0.2s ease-in-out !important;
+}
 
 /* Gradient text */
 .text-gradient {
@@ -285,7 +350,7 @@ body {
 
 .message-user {
   background: var(--gradient-primary);
-  color: white;
+  color: var(--text-on-primary); /* Use theme-appropriate text color for contrast against gradient */
   border-radius: 18px 18px 4px 18px;
 }
 

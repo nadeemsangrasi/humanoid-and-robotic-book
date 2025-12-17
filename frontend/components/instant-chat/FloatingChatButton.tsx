@@ -45,7 +45,7 @@ export function FloatingChatButton({ onClick }: FloatingChatButtonProps) {
       aria-label="Open chat"
       title="Ask AI Assistant"
     >
-      <MessageSquare className="w-6 h-6 text-white" />
+      <MessageSquare className="w-6 h-6 text-on-primary" />
     </motion.button>
   );
 }

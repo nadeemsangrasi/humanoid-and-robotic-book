@@ -8,6 +8,7 @@
  * - Centered page layout
  * - Redirect for already authenticated users
  * - Consistent styling for auth pages
+ * - Dark/light mode toggle
  *
  * Route Group: (auth)
  * Applies to: /login, /register
@@ -17,6 +18,9 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useTheme } from "@/hooks/useTheme";
+import { cn } from "@/lib/utils";
+import { Moon, Sun, BookOpen, Loader2 } from "lucide-react";
 
 /**
  * Auth Layout Props
@@ -30,31 +34,45 @@ interface AuthLayoutProps {
  */
 function LoadingSpinner() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="flex flex-col items-center">
-        <svg
-          className="animate-spin h-8 w-8 text-blue-600"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          />
-          <path
-            className="opacity-75"
-            fill="currentColor"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-          />
-        </svg>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-foreground-secondary">Loading...</p>
       </div>
     </div>
+  );
+}
+
+/**
+ * Theme Toggle Button
+ */
+function ThemeToggle() {
+  const { theme, toggleTheme, mounted } = useTheme();
+
+  if (!mounted) {
+    return (
+      <div className="h-10 w-10 rounded-lg bg-foreground-muted/10 animate-pulse" />
+    );
+  }
+
+  return (
+    <button
+      onClick={toggleTheme}
+      className={cn(
+        "flex h-10 w-10 items-center justify-center rounded-lg",
+        "border border-border bg-background",
+        "text-foreground-secondary hover:text-foreground",
+        "hover:bg-hover-bg transition-all duration-200",
+        "focus:outline-none focus:ring-2 focus:ring-primary/50"
+      )}
+      title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      {theme === "dark" ? (
+        <Sun className="h-5 w-5" />
+      ) : (
+        <Moon className="h-5 w-5" />
+      )}
+    </button>
   );
 }
 
@@ -86,30 +104,25 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="py-6 px-4">
-        <div className="max-w-7xl mx-auto">
+      <header className="py-4 px-4 border-b border-border">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center text-xl font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            className={cn(
+              "flex items-center gap-2 text-xl font-semibold",
+              "text-foreground hover:text-primary transition-colors"
+            )}
           >
-            <svg
-              className="w-8 h-8 mr-2 text-blue-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
-            </svg>
-            Physical AI & Humanoid Robotics
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
+              <BookOpen className="h-5 w-5 text-white" />
+            </div>
+            <span className="hidden sm:inline">Physical AI & Humanoid Robotics</span>
+            <span className="sm:hidden">Robotics AI</span>
           </Link>
+
+          <ThemeToggle />
         </div>
       </header>
 
@@ -119,9 +132,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 px-4 border-t border-gray-200 dark:border-gray-700">
+      <footer className="py-4 px-4 border-t border-border">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-foreground-muted">
             Interactive textbook chatbot for robotics education
           </p>
         </div>

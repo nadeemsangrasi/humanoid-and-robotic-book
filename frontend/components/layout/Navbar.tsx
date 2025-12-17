@@ -36,7 +36,7 @@ function NavLink({ href, children, icon, onClick }: NavLinkProps) {
         "transition-colors duration-200",
         isActive
           ? "bg-primary/10 text-primary"
-          : "text-foreground-secondary hover:text-foreground hover:bg-hover-bg"
+          : "text-foreground-secondary hover:text-foreground hover:bg-hover-bg hover:transition-colors"
       )}
     >
       {icon}
@@ -71,7 +71,7 @@ export function Navbar() {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border"
+      className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border"
       style={{ height: NAVBAR_HEIGHT }}
     >
       <nav className="h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

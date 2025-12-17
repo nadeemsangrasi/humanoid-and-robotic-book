@@ -190,6 +190,12 @@ export function useChatHistory(
     [onSessionChange]
   );
 
+  // Ref to track current session ID for use in callbacks
+  const sessionIdRef = useRef<string | null>(sessionId);
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
+
   /**
    * Add a message to the current session
    */
@@ -213,12 +219,14 @@ export function useChatHistory(
       setMessages((prev) => [...prev, newMessage]);
 
       // If no session exists and autoSave is enabled, create one
-      let currentSessionId = sessionId;
+      let currentSessionId = sessionIdRef.current;
       if (!currentSessionId && autoSave) {
         // Create session with first user message as title hint
-        const firstMessageTitle = role === "user" ? content : undefined;
+        const firstMessageTitle = role === "user" ? content.slice(0, 100) : undefined;
         currentSessionId = await createSession(firstMessageTitle);
         if (!currentSessionId) return;
+        // Update ref immediately so subsequent calls use the new session
+        sessionIdRef.current = currentSessionId;
       }
 
       // Persist to database if we have a session
@@ -258,7 +266,7 @@ export function useChatHistory(
         }
       }
     },
-    [sessionId, autoSave, createSession]
+    [autoSave, createSession]
   );
 
   /**
@@ -269,6 +277,7 @@ export function useChatHistory(
     setSession(null);
     setMessages([]);
     setError(null);
+    sessionIdRef.current = null;
     onSessionChange?.(null);
   }, [onSessionChange]);
 

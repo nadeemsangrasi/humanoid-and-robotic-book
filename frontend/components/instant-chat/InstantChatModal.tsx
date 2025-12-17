@@ -7,12 +7,13 @@
 
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Minimize2, Maximize2 } from "lucide-react";
 import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
 import { useColorScheme, type ColorScheme } from "@/hooks/useColorScheme";
+import { useChatHistory } from "@/hooks/useChatHistory";
 import { cn } from "@/lib/utils";
 
 interface InstantChatModalProps {
@@ -23,6 +24,19 @@ interface InstantChatModalProps {
 export function InstantChatModal({ open, onOpenChange }: InstantChatModalProps) {
   const { scheme, setScheme } = useColorScheme();
   const [isMinimized, setIsMinimized] = useState(false);
+
+  // Chat history management for instant chat
+  const {
+    sessionId,
+    session,
+    messages: historyMessages,
+    isLoading: historyLoading,
+    clearSession,
+    addMessage,
+  } = useChatHistory({
+    initialSessionId: undefined, // Start with a new session each time
+    autoSave: true,
+  });
 
   const handleWidgetAction = useCallback(async (action: FactAction) => {
     console.log("[InstantChatModal] Widget action:", action);
@@ -39,6 +53,17 @@ export function InstantChatModal({ open, onOpenChange }: InstantChatModalProps) 
     [setScheme]
   );
 
+  const handleSaveMessage = useCallback(
+    async (
+      role: "user" | "assistant",
+      content: string,
+      citations?: { title: string; url: string; excerpt?: string; score?: number }[]
+    ) => {
+      await addMessage(role, content, citations);
+    },
+    [addMessage]
+  );
+
   const toggleMinimize = useCallback(() => {
     setIsMinimized((prev) => !prev);
   }, []);
@@ -48,17 +73,15 @@ export function InstantChatModal({ open, onOpenChange }: InstantChatModalProps) 
       <AnimatePresence>
         {open && (
           <Dialog.Portal forceMount>
-            {/* Backdrop - only when not minimized */}
-            {!isMinimized && (
-              <Dialog.Overlay asChild>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
-                />
-              </Dialog.Overlay>
-            )}
+            {/* Backdrop - stays mounted, opacity controlled by isMinimized */}
+            <Dialog.Overlay asChild>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: isMinimized ? 0 : 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm"
+              />
+            </Dialog.Overlay>
 
             {/* Modal */}
             <Dialog.Content asChild>
@@ -136,6 +159,9 @@ export function InstantChatModal({ open, onOpenChange }: InstantChatModalProps) 
                       onWidgetAction={handleWidgetAction}
                       onResponseEnd={handleResponseEnd}
                       onThemeRequest={handleThemeRequest}
+                      sessionId={sessionId}
+                      initialMessages={historyMessages}
+                      onSaveMessage={handleSaveMessage}
                     />
                   </div>
                 )}

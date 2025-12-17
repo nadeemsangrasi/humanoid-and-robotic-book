@@ -172,33 +172,39 @@ As a developer, I want to run the backend locally using containers so that I can
 
 - **FR-014**: System MUST return appropriate error responses for invalid inputs (empty questions, exceeded length limits).
 
+### Functional Requirements - Authentication
+
+- **FR-015**: System MUST authenticate requests using email header authentication (not JWT tokens). The frontend will pass the user's email in an `X-User-Email` header.
+
+- **FR-016**: System MUST validate the email header format and reject requests without proper authentication headers.
+
 ### Functional Requirements - Deployment
 
-- **FR-015**: System MUST be deployable as a containerized service.
+- **FR-017**: System MUST be deployable as a containerized service.
 
-- **FR-016**: System MUST expose its service on port 7860.
+- **FR-018**: System MUST expose its service on port 7860.
 
-- **FR-017**: System MUST read configuration from environment variables (API keys, service URLs).
+- **FR-019**: System MUST read configuration from environment variables (API keys, service URLs).
 
-- **FR-018**: System MUST be deployable on free-tier cloud infrastructure.
+- **FR-020**: System MUST be deployable on free-tier cloud infrastructure.
 
-- **FR-019**: System MUST start and respond to health checks within 60 seconds of container launch.
+- **FR-021**: System MUST start and respond to health checks within 60 seconds of container launch.
 
-- **FR-020**: System MUST NOT expose secrets, API keys, or credentials in logs, error messages, or responses.
+- **FR-022**: System MUST NOT expose secrets, API keys, or credentials in logs, error messages, or responses.
 
-- **FR-021**: System MUST be accessible via HTTPS in production.
+- **FR-023**: System MUST be accessible via HTTPS in production.
 
-- **FR-022**: System MUST gracefully handle restarts without data loss or corruption.
+- **FR-024**: System MUST gracefully handle restarts without data loss or corruption.
 
-- **FR-023**: System MUST support local development environment using containers with the same configuration as production.
+- **FR-025**: System MUST support local development environment using containers with the same configuration as production.
 
 ### Functional Requirements - Error Handling
 
-- **FR-024**: System MUST return user-friendly error messages when external services are unavailable or rate-limited (fail fast, no retry/queue logic).
+- **FR-026**: System MUST return user-friendly error messages when external services are unavailable or rate-limited (fail fast, no retry/queue logic).
 
-- **FR-025**: System MUST log errors with sufficient detail for debugging without exposing sensitive information.
+- **FR-027**: System MUST log errors with sufficient detail for debugging without exposing sensitive information.
 
-- **FR-026**: System MUST validate all user input before processing.
+- **FR-028**: System MUST validate all user input before processing.
 
 ---
 
